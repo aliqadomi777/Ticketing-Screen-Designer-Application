@@ -1,6 +1,18 @@
+--These commented commands used to drop tables if they exist 
+
+/*
+IF OBJECT_ID('dbo.Messages', 'U') IS NOT NULL DROP TABLE dbo.Messages;
+IF OBJECT_ID('dbo.Tickets', 'U') IS NOT NULL DROP TABLE dbo.Tickets;
+IF OBJECT_ID('dbo.Buttons', 'U') IS NOT NULL DROP TABLE dbo.Buttons;
+IF OBJECT_ID('dbo.Screens', 'U') IS NOT NULL DROP TABLE dbo.Screens;
+IF OBJECT_ID('dbo.Services', 'U') IS NOT NULL DROP TABLE dbo.Services;
+IF OBJECT_ID('dbo.ButtonTypes', 'U') IS NOT NULL DROP TABLE dbo.ButtonTypes;
+IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
+*/ 
+
 CREATE TABLE Banks (
     BankID INT PRIMARY KEY IDENTITY ,
-    BankName VARCHAR (100) NOT NULL UNIQUE,
+    BankName NVARCHAR (100) NOT NULL UNIQUE,
 );
 
 
@@ -40,14 +52,14 @@ CREATE TABLE Buttons (
 
 CREATE TABLE Tickets(
     TicketID INT PRIMARY KEY IDENTITY,
-    ServicesID INT FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
-    ButtonID INT FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
+    ServicesID INT NOT NULL FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
+    ButtonID INT NOT NULL FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
     CONSTRAINT UniqueConstraintTickets UNIQUE (ButtonID)
 );
 
 CREATE TABLE Messages (
     MessageID INT PRIMARY KEY IDENTITY,
-    MessageEN VARCHAR(500) NOT NULL,
+    MessageEN NVARCHAR(500) NOT NULL,
     MessageAR NVARCHAR(500) NOT NULL,
     ButtonID INT NOT NULL FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
     CONSTRAINT UniqueConstraintMessageEN UNIQUE (ButtonID,MessageEN),
@@ -72,4 +84,29 @@ INSERT INTO Services (ServicesName) VALUES
 ('Bank Guarantees'),
 ('Wealth and Investment Management');
 
+/* turn this into a proc
+DECLARE @BankID INT;       
+DECLARE @NewScreenID INT; 
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+BEGIN TRANSACTION;
+
+    SELECT 1 
+    FROM Banks WITH (UPDLOCK, HOLDLOCK) 
+    WHERE BankID = @BankID;
+
+    UPDATE Screens 
+    SET IsActive = 0 
+    WHERE BankID = @BankID AND IsActive = 1;
+
+    UPDATE S 
+    SET S.IsActive = 1 
+    FROM Screens S
+    WHERE S.ScreenID = @NewScreenID 
+      AND S.BankID = @BankID;
+
+COMMIT TRANSACTION;
+
+
+*/
 
