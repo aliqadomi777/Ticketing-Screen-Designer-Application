@@ -1,17 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 namespace Ticketing_Screen_Designer.Models
 {
-    public class Message
+    public class MessageModel : ButtonModel
     {
-        [Key]
-        public int MessageId { get; set; }
-        [Required(ErrorMessage = "English message text is required.")]
-        [StringLength(500, ErrorMessage = "English message cannot exceed 500 characters.")]
+        [Required(ErrorMessage = "Button name is required.")]
+        [StringLength(500, ErrorMessage = "Button name can't exeed 500 characters.")]
         public string MessageEN { get; set; }
-        [Required(ErrorMessage = "Arabic message text is required.")]
-        [StringLength(500, ErrorMessage = "Arabic message cannot exceed 500 characters.")]
+        [Required(ErrorMessage = "Button name is required.")]
+        [StringLength(500, ErrorMessage = "Button name can't exeed 500 characters.")]
         public string MessageAR { get; set; }
-        [Required(ErrorMessage = "Button ID reference is required.")]
-        public int ButtonId { get; set; }
+        [Required(ErrorMessage = "Message ID reference is required.")]
+        public int MessageId { get; set; }
     }
 }

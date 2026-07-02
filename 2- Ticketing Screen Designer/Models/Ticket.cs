@@ -1,17 +1,16 @@
-﻿
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-
-namespace Ticketing_Screen_Designer
+namespace Ticketing_Screen_Designer.Models
 {
-    public class Ticket
+    public class TicketModel : ButtonModel
     {
-        [Key]
+
+        [Required(ErrorMessage = "Ticket ID reference is required.")]
         public int TicketId { get; set; }
         [Required(ErrorMessage = "Service ID reference is required.")]
         public int ServiceId { get; set; }
-        [Required(ErrorMessage = "Button ID reference is required.")]
 
-        public int ButtonId { get; set; }
+        public String ServiceName { get; set; }
 
     }
 }

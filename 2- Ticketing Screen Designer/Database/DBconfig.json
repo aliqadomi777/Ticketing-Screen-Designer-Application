@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=TicketingScreenDesignerDB;User Id=sa;Password=Sedc0@123;TrustServerCertificate=True;"
+  }
+}

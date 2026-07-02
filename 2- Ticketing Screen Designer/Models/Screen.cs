@@ -1,11 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Policy;
-using Ticketing_Screen_Designer.Models;
-namespace Ticketing_Screen_Designer
+
+namespace Ticketing_Screen_Designer.Models
 {
 
-    public class Screen
+    public class ScreenModel
     {
         [Key]
         public int ScreenId { get; set; }
