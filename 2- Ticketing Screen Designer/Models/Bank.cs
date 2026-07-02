@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 namespace Ticketing_Screen_Designer.Models
 {
-    public class Bank
+    public class BankModel
     {
         [Key]
         public int BankId { get; set; }
