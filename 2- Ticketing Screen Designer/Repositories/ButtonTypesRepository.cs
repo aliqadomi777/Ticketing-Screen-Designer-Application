@@ -22,14 +22,12 @@ namespace Ticketing_Screen_Designer.Repositories
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        int typeIdOrd = reader.GetOrdinal("TypeID");
-                        int typeNameOrd = reader.GetOrdinal("TypeName");
                         if (reader.Read())
                         {
                             return new ButtonTypes
                             {
-                                TypeId = reader.GetInt32(typeIdOrd),
-                                TypeName = reader.GetString(typeNameOrd),
+                                TypeId = reader.GetInt32(reader.GetOrdinal("TypeID")),
+                                TypeName = reader.GetString(reader.GetOrdinal("TypeName")),
 
                             };
                         }
@@ -50,15 +48,18 @@ namespace Ticketing_Screen_Designer.Repositories
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
                     {
-                        int typeIdOrd = reader.GetOrdinal("TypeID");
-                        int typeNameOrd = reader.GetOrdinal("TypeName");
-                        while (reader.Read())
+                        if (reader.HasRows)
                         {
-                            buttonTypes.Add(new ButtonTypes
+                            int typeIdOrd = reader.GetOrdinal("TypeID");
+                            int typeNameOrd = reader.GetOrdinal("TypeName");
+                            while (reader.Read())
                             {
-                                TypeId = reader.GetInt32(typeIdOrd),
-                                TypeName = reader.GetString(typeNameOrd),
-                            });
+                                buttonTypes.Add(new ButtonTypes
+                                {
+                                    TypeId = reader.GetInt32(typeIdOrd),
+                                    TypeName = reader.GetString(typeNameOrd),
+                                });
+                            }
                         }
 
                     }
@@ -66,7 +67,7 @@ namespace Ticketing_Screen_Designer.Repositories
                 }
 
             }
-            return buttonTypes.Count == 0 ? null : buttonTypes;
+            return buttonTypes;
         }
     }
 }

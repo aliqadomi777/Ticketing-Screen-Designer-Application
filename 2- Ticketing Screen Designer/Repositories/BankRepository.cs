@@ -24,16 +24,17 @@ namespace Ticketing_Screen_Designer.Repositories
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        int bankIdOrd = reader.GetOrdinal("BankID");
-                        int bankNameOrd = reader.GetOrdinal("BankName");
+
                         if (reader.Read())
                         {
                             return new BankModel
                             {
-                                BankId = reader.GetInt32(bankIdOrd),
-                                BankName = reader.GetString(bankNameOrd)
+                                BankId = reader.GetInt32(reader.GetOrdinal("BankID")),
+                                BankName = reader.GetString(reader.GetOrdinal("BankName"))
                             };
                         }
+
+
                     }
                 }
 
@@ -55,8 +56,12 @@ namespace Ticketing_Screen_Designer.Repositories
 
                     cmd.Parameters.Add("@BankName", SqlDbType.NVarChar, 100).Value = model.BankName;
                     conn.Open();
-                    var result = cmd.ExecuteScalar();
-                    return (int)result;
+                    if (cmd.ExecuteScalar() is int newId)
+                    {
+                        return newId;
+                    }
+
+                    throw new InvalidOperationException("Database failed to return a valid auto-incremented Identity ID.");
                 }
             }
 

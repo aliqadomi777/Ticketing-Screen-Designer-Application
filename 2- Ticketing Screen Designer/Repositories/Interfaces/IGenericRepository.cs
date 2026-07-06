@@ -15,12 +15,12 @@ namespace Ticketing_Screen_Designer.Interfaces
 
     public interface IUpdateableRepository<T> where T : class
     {
-        void Update(T entity);
+        bool Update(T entity);
     }
 
     public interface IDeleteableRepository<T> where T : class
     {
-        void Delete(int id);
+        bool Delete(int id);
     }
 
     public interface IListableRepository<T> where T : class

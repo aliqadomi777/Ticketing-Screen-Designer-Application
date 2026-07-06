@@ -23,14 +23,12 @@ namespace Ticketing_Screen_Designer.Repositories
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        int serviceIdOrd = reader.GetOrdinal("ServiceID");
-                        int servicesNameOrd = reader.GetOrdinal("ServicesName");
                         if (reader.Read())
                         {
                             return new ServiceType
                             {
-                                ServiceId = reader.GetInt32(serviceIdOrd),
-                                ServicesName = reader.GetString(servicesNameOrd),
+                                ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
+                                ServicesName = reader.GetString(reader.GetOrdinal("ServicesName")),
 
                             };
                         }
@@ -50,22 +48,25 @@ namespace Ticketing_Screen_Designer.Repositories
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
                     {
-                        int serviceIdOrd = reader.GetOrdinal("ServiceID");
-                        int servicesNameOrd = reader.GetOrdinal("ServicesName");
-                        while (reader.Read())
+                        if (reader.HasRows)
                         {
-                            services.Add(new ServiceType
+                            int serviceIdOrd = reader.GetOrdinal("ServiceID");
+                            int servicesNameOrd = reader.GetOrdinal("ServicesName");
+                            while (reader.Read())
                             {
-                                ServiceId = reader.GetInt32(serviceIdOrd),
-                                ServicesName = reader.GetString(servicesNameOrd),
-                            });
+                                services.Add(new ServiceType
+                                {
+                                    ServiceId = reader.GetInt32(serviceIdOrd),
+                                    ServicesName = reader.GetString(servicesNameOrd),
+                                });
+                            }
                         }
 
                     }
 
                 }
             }
-            return services.Count == 0 ? null : services;
+            return services;
 
         }
     }
