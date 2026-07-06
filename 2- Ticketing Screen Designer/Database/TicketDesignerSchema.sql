@@ -53,17 +53,15 @@ CREATE TABLE Buttons (
 CREATE TABLE Tickets(
     TicketID INT PRIMARY KEY IDENTITY,
     ServiceID INT NOT NULL FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
-    ButtonID INT NOT NULL FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintTickets UNIQUE (ButtonID)
+    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
 );
 
 CREATE TABLE Messages (
     MessageID INT PRIMARY KEY IDENTITY,
     MessageEN NVARCHAR(500) NOT NULL,
     MessageAR NVARCHAR(500) NOT NULL,
-    ButtonID INT NOT NULL FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintMessageEN UNIQUE (ButtonID,MessageEN),
-    CONSTRAINT UniqueConstraintMessageAR UNIQUE (ButtonID,MessageAR),
+    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE,
+
 );
 
 
@@ -83,30 +81,40 @@ INSERT INTO Services (ServicesName) VALUES
 ('Safe Deposit Boxes'),
 ('Bank Guarantees'),
 ('Wealth and Investment Management');
+GO
 
-/* turn this into a proc
-DECLARE @BankID INT;       
-DECLARE @NewScreenID INT; 
+CREATE TRIGGER dbo.triggerModifiedAt_Screens
+ON dbo.Screens
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-BEGIN TRANSACTION;
+    IF UPDATE(ModifiedAt) RETURN;
 
-    SELECT 1 
-    FROM Banks WITH (UPDLOCK, HOLDLOCK) 
-    WHERE BankID = @BankID;
+    UPDATE s
+    SET s.ModifiedAt = SYSUTCDATETIME()
+    FROM dbo.Screens s
+    INNER JOIN inserted i ON s.ScreenID = i.ScreenID;
+END;
+GO
 
-    UPDATE Screens 
-    SET IsActive = 0 
-    WHERE BankID = @BankID AND IsActive = 1;
-
-    UPDATE S 
-    SET S.IsActive = 1 
-    FROM Screens S
-    WHERE S.ScreenID = @NewScreenID 
-      AND S.BankID = @BankID;
-
-COMMIT TRANSACTION;
+CREATE TRIGGER dbo.triggerModifiedAt_Buttons
+ON dbo.Buttons
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
 
 
-*/
+    UPDATE b
+    SET b.ModifiedAt = SYSUTCDATETIME()
+    FROM dbo.Buttons b
+    INNER JOIN inserted i ON b.ButtonID = i.ButtonID;
+END;
+GO
 
+-- prevent same bank having more than one active screen
+CREATE UNIQUE NONCLUSTERED INDEX UniqueIndexActiveScreen
+ON Screens(BankID)
+WHERE IsActive = 1;
