@@ -1,7 +1,7 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 
-namespace Ticketing_Screen_Designer.Interfaces
+namespace Ticketing_Screen_Designer.Interfaces.Repositories
 {
     public interface IFetchableRepository<T> where T : class
     {

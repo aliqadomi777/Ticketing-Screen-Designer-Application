@@ -1,4 +1,4 @@
-﻿namespace Ticketing_Screen_Designer.Repositories.Interfaces
+﻿namespace Ticketing_Screen_Designer.Interfaces.Repositories
 {
     public interface IMessageRepository<T> where T : class
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using Ticketing_Screen_Designer.Interfaces;
+using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
 namespace Ticketing_Screen_Designer.Repositories
 {

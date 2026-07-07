@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using Ticketing_Screen_Designer.Interfaces;
+using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
 namespace Ticketing_Screen_Designer.Repositories
 {
@@ -85,7 +85,6 @@ namespace Ticketing_Screen_Designer.Repositories
 
         public int Add(ScreenModel model)
         {
-            ValidateModel(model);
             string query = @"
             INSERT INTO Screens (ScreenName, BankID) VALUES(@Name, @BankId);
             SELECT CAST(SCOPE_IDENTITY() as int);";
@@ -107,7 +106,6 @@ namespace Ticketing_Screen_Designer.Repositories
         }
         public bool Update(ScreenModel model)
         {
-            ValidateModel(model);
             string deactivateQuery = @"UPDATE Screens SET IsActive=0 WHERE BankID=@BankID AND ScreenID!=@ScreenID;";
             string query = @"UPDATE Screens SET ScreenName=@ScreenName, IsActive=@IsActive,  ModifiedAt=SYSUTCDATETIME() WHERE ScreenID=@ScreenID";
             if (model.IsActive)

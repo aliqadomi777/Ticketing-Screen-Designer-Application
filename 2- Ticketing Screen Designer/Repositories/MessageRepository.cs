@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using Ticketing_Screen_Designer.Interfaces;
+using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
-using Ticketing_Screen_Designer.Repositories;
-
-namespace Ticketing_Screen_Designer
+namespace Ticketing_Screen_Designer.Repositories
 {
     public class MessageRepository : BaseRepository,
         IDeleteableRepository<MessageModel>,

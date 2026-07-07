@@ -1,6 +1,6 @@
-﻿namespace Ticketing_Screen_Designer.Models
+﻿namespace Ticketing_Screen_Designer.DTO.ButtonTypes
 {
-    public class ButtonTypes
+    public class ButtonTypeResponseDto
     {
 
         public int TypeId { get; set; }

@@ -1,6 +1,6 @@
-﻿namespace Ticketing_Screen_Designer.Models
+﻿namespace Ticketing_Screen_Designer.DTO.Services
 {
-    public class ServiceType
+    public class ServiceTypeResponseDto
     {
         public int ServiceId { get; set; }
         public string ServicesName { get; set; }

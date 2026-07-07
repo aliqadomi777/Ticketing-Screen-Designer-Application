@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using Ticketing_Screen_Designer.Interfaces;
+using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
-
 namespace Ticketing_Screen_Designer.Repositories
 {
     public class ButtonRepository : BaseRepository,
@@ -16,10 +15,10 @@ namespace Ticketing_Screen_Designer.Repositories
         IUpdateableRepository<ButtonModel>
     {
         public ButtonRepository(string connectionString) : base(connectionString) { }
-        public ButtonModel GetById(int id, string typeName)
+        public ButtonModel GetById(int id, int buttonType)
         {
             string query = string.Empty;
-            if (typeName == "Issue Ticket")
+            if (buttonType == 1)
             {
                 query = @"
                 SELECT B.ButtonID, B.ButtonNameEN, B.ButtonNameAR, B.ScreenID, B.ModifiedAt, B.ButtonType, T.TicketID, T.ServiceID, S.ServicesName
@@ -28,7 +27,7 @@ namespace Ticketing_Screen_Designer.Repositories
                 WHERE B.ButtonID = @ButtonID;";
 
             }
-            else if (typeName == "Show Message")
+            else if (buttonType == 2)
             {
                 query = @"
                 SELECT B.ButtonID,B.ButtonNameEN, B.ButtonNameAR, B.ScreenID, B.ModifiedAt, B.ButtonType, M.MessageID, M.MessageEN, M.MessageAR
@@ -46,7 +45,7 @@ namespace Ticketing_Screen_Designer.Repositories
                     {
                         if (reader.Read())
                         {
-                            if (typeName == "Show Message")
+                            if (buttonType == 2)
                             {
                                 return new MessageModel
                                 {
@@ -63,7 +62,7 @@ namespace Ticketing_Screen_Designer.Repositories
 
                                 };
                             }
-                            else if (typeName == "Issue Ticket")
+                            else if (buttonType == 1)
                             {
                                 return new TicketModel
                                 {
@@ -88,12 +87,13 @@ namespace Ticketing_Screen_Designer.Repositories
             }
             return null;
         }
+
         public IEnumerable<ButtonModel> GetAll(int id)
         {
             string query = @"
             SELECT B.ButtonID, B.ButtonNameEN, B.ButtonNameAR, B.ButtonType, B.ScreenID, B.ModifiedAt, BT.TypeName
             FROM Buttons B INNER JOIN ButtonTypes BT ON B.ButtonType = BT.TypeID
-            WHERE B.ScreenID = @ScreenID ";
+            WHERE B.ScreenID = @ScreenID;";
 
             List<ButtonModel> buttons = new List<ButtonModel>();
 
@@ -142,7 +142,6 @@ namespace Ticketing_Screen_Designer.Repositories
 
         public int Add(TicketModel model)
         {
-            ValidateModel(model);
             string query = @"
             INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
             VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
@@ -186,7 +185,6 @@ namespace Ticketing_Screen_Designer.Repositories
 
         public int Add(MessageModel model)
         {
-            ValidateModel(model);
             string query = @"
             INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
             VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
@@ -232,10 +230,9 @@ namespace Ticketing_Screen_Designer.Repositories
 
         public bool Update(ButtonModel model)
         {
-            ValidateModel(model);
             string query = @"
             UPDATE Buttons 
-            SET ButtonNameEN=@ButtonNameEN, ButtonNameAR=@ButtonNameAR, ButtonType=@ButtonType, ModifiedAt=SYSUTCDATETIME()
+            SET ButtonNameEN=@ButtonNameEN, ButtonNameAR=@ButtonNameAR, ButtonType=@ButtonType
             WHERE ButtonID=@ButtonID;";
             using (var conn = new SqlConnection(ConnectionString))
             {

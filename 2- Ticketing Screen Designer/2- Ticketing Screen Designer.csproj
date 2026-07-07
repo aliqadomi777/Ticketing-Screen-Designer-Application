@@ -52,6 +52,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTO\Banks\BankResponse.cs" />
+    <Compile Include="DTO\Banks\BankRequest.cs" />
+    <Compile Include="DTO\Buttons\BaseButtonResponse.cs" />
+    <Compile Include="DTO\Buttons\BaseButton.cs" />
+    <Compile Include="DTO\Buttons\CreateMessageButtonRequest.cs" />
+    <Compile Include="DTO\Buttons\CreateTicketButtonRequest.cs" />
+    <Compile Include="DTO\Buttons\TicketButtonResponse.cs" />
+    <Compile Include="DTO\Buttons\MessageButtonResponse.cs" />
+    <Compile Include="DTO\Buttons\UpdateButtonRequest.cs" />
+    <Compile Include="DTO\ButtonTypes\ButtonTypeResponse.cs" />
+    <Compile Include="DTO\Messages\UpdateMessageRequest.cs" />
+    <Compile Include="DTO\Tickets\BaseTicketRequest.cs" />
+    <Compile Include="DTO\Tickets\CreateTicketRequest.cs" />
+    <Compile Include="DTO\Messages\BaseMessageRequest.cs" />
+    <Compile Include="DTO\Messages\CreateMessageRequest.cs" />
+    <Compile Include="DTO\Screens\BaseScreenRequest.cs" />
+    <Compile Include="DTO\Screens\ScreenRequest.cs" />
+    <Compile Include="DTO\Screens\ScreenResponse.cs" />
+    <Compile Include="DTO\Services\ServiceTypeResponse.cs" />
+    <Compile Include="DTO\Tickets\UpdateTicketRequest.cs" />
+    <Compile Include="Interfaces\Services\IButtonService.cs" />
+    <Compile Include="Interfaces\Services\IButtonTypeService.cs" />
+    <Compile Include="Interfaces\Services\IBankService.cs" />
+    <Compile Include="Interfaces\Services\IMessageService.cs" />
+    <Compile Include="Interfaces\Services\IScreenService.cs" />
+    <Compile Include="Interfaces\Services\IServiceTypeService.cs" />
+    <Compile Include="Interfaces\Services\ITicketService.cs" />
     <Compile Include="Models\Bank.cs" />
     <Compile Include="Models\Button.cs" />
     <Compile Include="Models\ButtonTypes.cs" />
@@ -65,20 +92,28 @@
     <Compile Include="Repositories\BaseRepository.cs" />
     <Compile Include="Repositories\ButtonRepository.cs" />
     <Compile Include="Repositories\ButtonTypesRepository.cs" />
-    <Compile Include="Repositories\Interfaces\IMessageRepository.cs" />
-    <Compile Include="Repositories\Interfaces\ITicketRepository.cs" />
+    <Compile Include="Interfaces\Repositories\IMessageRepository.cs" />
+    <Compile Include="Interfaces\Repositories\ITicketRepository.cs" />
     <Compile Include="Repositories\MessageRepository.cs" />
     <Compile Include="Repositories\TicketRepository.cs" />
-    <Compile Include="Repositories\Interfaces\IButtonRepository.cs" />
+    <Compile Include="Interfaces\Repositories\IButtonRepository.cs" />
     <Compile Include="Repositories\ServiceRepository.cs" />
     <Compile Include="Repositories\ScreenRepository.cs" />
-    <Compile Include="Repositories\Interfaces\IGenericRepository.cs" />
+    <Compile Include="Interfaces\Repositories\IGenericRepository.cs" />
+    <Compile Include="Services\BankService.cs" />
+    <Compile Include="Services\ButtonService.cs" />
+    <Compile Include="Services\ButtonTypeService.cs" />
+    <Compile Include="Services\MessageService.cs" />
+    <Compile Include="Services\ScreenService.cs" />
+    <Compile Include="Services\ServiceTypeService.cs" />
+    <Compile Include="Services\TicketService.cs" />
     <Compile Include="UI\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\Validation.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -106,8 +141,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
