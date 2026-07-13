@@ -164,6 +164,20 @@
     <Compile Include="Services\ScreenService.cs" />
     <Compile Include="Services\ServiceTypeService.cs" />
     <Compile Include="Services\TicketService.cs" />
+    <Compile Include="UI\AddScreenForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\AddScreenForm.Designer.cs">
+      <DependentUpon>AddScreenForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\EditScreenForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\EditScreenForm.Designer.cs">
+      <DependentUpon>EditScreenForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\StateService\UiStateService.cs" />
+    <Compile Include="UI\StateService\IUiStateService.cs" />
     <Compile Include="UI\LoginForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -193,6 +207,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="UI\AddScreenForm.resx">
+      <DependentUpon>AddScreenForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\EditScreenForm.resx">
+      <DependentUpon>EditScreenForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
     </EmbeddedResource>

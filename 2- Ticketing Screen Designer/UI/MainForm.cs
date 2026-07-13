@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Banks;
+using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.Interfaces.Services;
-using Ticketing_Screen_Designer.Services;
 
 namespace _2__Ticketing_Screen_Designer.UI
 {
@@ -11,12 +13,23 @@ namespace _2__Ticketing_Screen_Designer.UI
     {
         private readonly IScreenService _screenService;
         private readonly IServiceProvider _serviceProvider;
-        public MainForm(IScreenService screenService, IServiceProvider serviceProvider)
+        private readonly IUiStateService _stateService;
+
+
+        public MainForm(IScreenService screenService, IServiceProvider serviceProvider, IUiStateService stateService)
         {
             InitializeComponent();
             _screenService = screenService;
             _serviceProvider = serviceProvider;
+            _stateService = stateService;
+            this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
 
+            screenList.BackColor = ColorTranslator.FromHtml("#FFFFFF");
+            screenList.ForeColor = ColorTranslator.FromHtml("#333333");
+
+            AddScreenButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
+            EditScreenButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
+            DeleteScreenButton.BackColor = ColorTranslator.FromHtml("#D83B01");
         }
 
 
@@ -29,10 +42,89 @@ namespace _2__Ticketing_Screen_Designer.UI
         {
 
         }
-        public void InitializeBankData(BankResponseDto bankDetails)
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            TitleLabel.Text += bankDetails.BankName;
-            var screens = _screenService.GetAllScreensDetails(bankDetails.BankId);
+            Application.Exit();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            var bankSession = _stateService.Get<BankResponseDto>();
+            TitleLabel.Text = $"Main Form - {bankSession.BankName}";
+
+
+            refreshList();
+
+        }
+
+        public void refreshList()
+        {
+            var bankSession = _stateService.Get<BankResponseDto>();
+
+            if (bankSession != null)
+            {
+                var screens = _screenService.GetAllScreensDetails(bankSession.BankId);
+                screenList.DisplayMember = "DisplayText";
+                foreach (var screen in screens)
+                {
+                    screenList.Items.Add(screen);
+                }
+            }
+        }
+        private void MainForm_Click(object sender, EventArgs e)
+        {
+            this.ActiveControl = null;
+            screenList.ClearSelected();
+        }
+
+        private void DeleteScreenButton_Click(object sender, EventArgs e)
+        {
+            if (screenList.SelectedItem is ScreenResponseDto selectedScreen)
+            {
+                int screenIdToDelete = selectedScreen.ScreenId;
+                string screenName = selectedScreen.ScreenName;
+                DialogResult confirm = MessageBox.Show(
+                    $"Are you sure you want to delete the screen : {screenName}?",
+                    "Delete Screen",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+                if (confirm == DialogResult.Yes)
+                {
+                    if (_screenService.DeleteScreen(screenIdToDelete))
+                    {
+                        MessageBox.Show($"Successfully initiated deletion for Screen : {screenName}");
+
+
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Screen is already deleted");
+                    }
+                    screenList.Items.Remove(selectedScreen);
+                    screenList.ClearSelected();
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Please select a screen to delete.");
+            }
+        }
+
+        private void EditScreenButton_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void AddScreenButton_Click(object sender, EventArgs e)
+        {
+            var addScreen = _serviceProvider.GetRequiredService<AddScreenForm>();
+            addScreen.Show();
+            this.Hide();
+
+
 
         }
     }

@@ -40,21 +40,25 @@ namespace Ticketing_Screen_Designer
             //change this later
             string connectionString = "Server=localhost;Database=TicketingScreenDesignerDB;User Id=sa;Password=Sedc0@123;TrustServerCertificate=True;";
             var services = new ServiceCollection();
+            services.AddSingleton<IUiStateService, UiStateService>();
 
-            services.AddScoped<IFetchableRepository<BankModel>>(provider => new BankRepository(connectionString));
-            services.AddScoped<IAddableRepository<BankModel>>(provider => new BankRepository(connectionString));
-            services.AddScoped<IBankService, BankService>();
+            services.AddTransient<IFetchableRepository<BankModel>>(provider => new BankRepository(connectionString));
+            services.AddTransient<IAddableRepository<BankModel>>(provider => new BankRepository(connectionString));
+            services.AddTransient<IBankService, BankService>();
 
-            services.AddScoped<IFetchableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
-            services.AddScoped<IAddableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
-            services.AddScoped<IDeleteableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
-            services.AddScoped<IListableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
-            services.AddScoped<IUpdateableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
-            services.AddScoped<IScreenService, ScreenService>();
+            services.AddTransient<IFetchableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
+            services.AddTransient<IAddableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
+            services.AddTransient<IDeleteableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
+            services.AddTransient<IListableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
+            services.AddTransient<IUpdateableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
+            services.AddTransient<IScreenService, ScreenService>();
 
             services.AddTransient<LoginForm>();
             services.AddTransient<MainForm>();
             services.AddTransient<RegisterForm>();
+            services.AddTransient<EditScreenForm>();
+            services.AddTransient<AddScreenForm>();
+
 
             using (var serviceProvider = services.BuildServiceProvider())
             {

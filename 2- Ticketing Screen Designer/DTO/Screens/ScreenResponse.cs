@@ -8,5 +8,13 @@ namespace Ticketing_Screen_Designer.DTO.Screens
         public bool IsActive { get; set; }
         public DateTimeOffset ModifiedAt { get; set; }
         public int BankId { get; set; }
+
+        public string DisplayText
+        {
+            get
+            {
+                return IsActive ? $"  {ScreenName}  (Active)" : $"  {ScreenName}";
+            }
+        }
     }
 }

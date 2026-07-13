@@ -1,0 +1,204 @@
+﻿namespace _2__Ticketing_Screen_Designer.UI
+{
+    partial class EditScreenForm
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.ScreenNameLabel = new System.Windows.Forms.Label();
+            this.StatusLabel = new System.Windows.Forms.Label();
+            this.ScreenName = new System.Windows.Forms.TextBox();
+            this.ActivateButton = new System.Windows.Forms.RadioButton();
+            this.DeactivateButton = new System.Windows.Forms.RadioButton();
+            this.ButtonsList = new System.Windows.Forms.ListBox();
+            this.ButtonLabel = new System.Windows.Forms.Label();
+            this.EditButton = new System.Windows.Forms.Button();
+            this.DeleteButton = new System.Windows.Forms.Button();
+            this.AddButton = new System.Windows.Forms.Button();
+            this.SaveButton = new System.Windows.Forms.Button();
+            this.CancelButton = new System.Windows.Forms.Button();
+            this.SuspendLayout();
+            // 
+            // ScreenNameLabel
+            // 
+            this.ScreenNameLabel.AutoSize = true;
+            this.ScreenNameLabel.Location = new System.Drawing.Point(13, 42);
+            this.ScreenNameLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.ScreenNameLabel.Name = "ScreenNameLabel";
+            this.ScreenNameLabel.Size = new System.Drawing.Size(64, 25);
+            this.ScreenNameLabel.TabIndex = 0;
+            this.ScreenNameLabel.Text = "Name";
+            this.ScreenNameLabel.Click += new System.EventHandler(this.label1_Click);
+            // 
+            // StatusLabel
+            // 
+            this.StatusLabel.AutoSize = true;
+            this.StatusLabel.Location = new System.Drawing.Point(13, 106);
+            this.StatusLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.StatusLabel.Name = "StatusLabel";
+            this.StatusLabel.Size = new System.Drawing.Size(68, 25);
+            this.StatusLabel.TabIndex = 1;
+            this.StatusLabel.Text = "Status";
+            // 
+            // ScreenName
+            // 
+            this.ScreenName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ScreenName.Location = new System.Drawing.Point(102, 40);
+            this.ScreenName.Name = "ScreenName";
+            this.ScreenName.Size = new System.Drawing.Size(718, 30);
+            this.ScreenName.TabIndex = 2;
+            // 
+            // ActivateButton
+            // 
+            this.ActivateButton.AutoSize = true;
+            this.ActivateButton.Location = new System.Drawing.Point(102, 104);
+            this.ActivateButton.Name = "ActivateButton";
+            this.ActivateButton.Size = new System.Drawing.Size(103, 29);
+            this.ActivateButton.TabIndex = 3;
+            this.ActivateButton.TabStop = true;
+            this.ActivateButton.Text = "Activate";
+            this.ActivateButton.UseVisualStyleBackColor = true;
+            this.ActivateButton.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
+            // 
+            // DeactivateButton
+            // 
+            this.DeactivateButton.AutoSize = true;
+            this.DeactivateButton.Location = new System.Drawing.Point(251, 104);
+            this.DeactivateButton.Name = "DeactivateButton";
+            this.DeactivateButton.Size = new System.Drawing.Size(125, 29);
+            this.DeactivateButton.TabIndex = 4;
+            this.DeactivateButton.TabStop = true;
+            this.DeactivateButton.Text = "Deactivate";
+            this.DeactivateButton.UseVisualStyleBackColor = true;
+            this.DeactivateButton.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
+            // 
+            // ButtonsList
+            // 
+            this.ButtonsList.FormattingEnabled = true;
+            this.ButtonsList.ItemHeight = 25;
+            this.ButtonsList.Location = new System.Drawing.Point(12, 275);
+            this.ButtonsList.Name = "ButtonsList";
+            this.ButtonsList.Size = new System.Drawing.Size(900, 379);
+            this.ButtonsList.TabIndex = 5;
+            this.ButtonsList.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
+            // 
+            // ButtonLabel
+            // 
+            this.ButtonLabel.AutoSize = true;
+            this.ButtonLabel.Location = new System.Drawing.Point(419, 241);
+            this.ButtonLabel.Name = "ButtonLabel";
+            this.ButtonLabel.Size = new System.Drawing.Size(78, 25);
+            this.ButtonLabel.TabIndex = 6;
+            this.ButtonLabel.Text = "Buttons";
+            this.ButtonLabel.Click += new System.EventHandler(this.label1_Click_1);
+            // 
+            // EditButton
+            // 
+            this.EditButton.Location = new System.Drawing.Point(200, 177);
+            this.EditButton.Name = "EditButton";
+            this.EditButton.Size = new System.Drawing.Size(154, 53);
+            this.EditButton.TabIndex = 9;
+            this.EditButton.Text = "Edit Button";
+            this.EditButton.UseVisualStyleBackColor = true;
+            // 
+            // DeleteButton
+            // 
+            this.DeleteButton.Location = new System.Drawing.Point(378, 177);
+            this.DeleteButton.Name = "DeleteButton";
+            this.DeleteButton.Size = new System.Drawing.Size(154, 53);
+            this.DeleteButton.TabIndex = 8;
+            this.DeleteButton.Text = "Delete Button";
+            this.DeleteButton.UseVisualStyleBackColor = true;
+            // 
+            // AddButton
+            // 
+            this.AddButton.Location = new System.Drawing.Point(18, 177);
+            this.AddButton.Name = "AddButton";
+            this.AddButton.Size = new System.Drawing.Size(154, 53);
+            this.AddButton.TabIndex = 7;
+            this.AddButton.Text = "Add Button";
+            this.AddButton.UseVisualStyleBackColor = true;
+            // 
+            // SaveButton
+            // 
+            this.SaveButton.Location = new System.Drawing.Point(632, 669);
+            this.SaveButton.Name = "SaveButton";
+            this.SaveButton.Size = new System.Drawing.Size(128, 36);
+            this.SaveButton.TabIndex = 13;
+            this.SaveButton.Text = "Save";
+            this.SaveButton.UseVisualStyleBackColor = true;
+            // 
+            // CancelButton
+            // 
+            this.CancelButton.Location = new System.Drawing.Point(784, 669);
+            this.CancelButton.Name = "CancelButton";
+            this.CancelButton.Size = new System.Drawing.Size(128, 36);
+            this.CancelButton.TabIndex = 12;
+            this.CancelButton.Text = "Cancel";
+            this.CancelButton.UseVisualStyleBackColor = true;
+            // 
+            // AddEditScreen
+            // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+            this.ClientSize = new System.Drawing.Size(924, 717);
+            this.Controls.Add(this.SaveButton);
+            this.Controls.Add(this.CancelButton);
+            this.Controls.Add(this.EditButton);
+            this.Controls.Add(this.DeleteButton);
+            this.Controls.Add(this.AddButton);
+            this.Controls.Add(this.ButtonLabel);
+            this.Controls.Add(this.ButtonsList);
+            this.Controls.Add(this.DeactivateButton);
+            this.Controls.Add(this.ActivateButton);
+            this.Controls.Add(this.ScreenName);
+            this.Controls.Add(this.StatusLabel);
+            this.Controls.Add(this.ScreenNameLabel);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Name = "AddEditScreen";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "AddEditScreen";
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Label ScreenNameLabel;
+        private System.Windows.Forms.Label StatusLabel;
+        private System.Windows.Forms.TextBox ScreenName;
+        private System.Windows.Forms.RadioButton ActivateButton;
+        private System.Windows.Forms.RadioButton DeactivateButton;
+        private System.Windows.Forms.ListBox ButtonsList;
+        private System.Windows.Forms.Label ButtonLabel;
+        private System.Windows.Forms.Button EditButton;
+        private System.Windows.Forms.Button DeleteButton;
+        private System.Windows.Forms.Button AddButton;
+        private System.Windows.Forms.Button SaveButton;
+        private System.Windows.Forms.Button CancelButton;
+    }
+}

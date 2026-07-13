@@ -86,7 +86,9 @@ namespace Ticketing_Screen_Designer.Services
                 var screenModel = new ScreenModel
                 {
                     ScreenName = request.ScreenName,
-                    BankId = request.BankId
+                    BankId = request.BankId,
+                    IsActive = request.IsActive,
+
                 };
                 int generatedId = _addRepository.Add(screenModel);
                 return generatedId;
