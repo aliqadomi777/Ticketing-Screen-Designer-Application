@@ -5,7 +5,7 @@ namespace Ticketing_Screen_Designer.Interfaces.Services
 {
     public interface IServiceTypeService
     {
-        ServiceTypeResponseDto GetButtonType(int id);
-        List<ServiceTypeResponseDto> GetAllButtonTypes();
+        ServiceTypeResponseDto GetServiceType(int id);
+        List<ServiceTypeResponseDto> GetAllServices();
     }
 }

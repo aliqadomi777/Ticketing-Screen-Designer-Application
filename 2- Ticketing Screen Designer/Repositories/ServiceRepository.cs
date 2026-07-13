@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Serilog;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
@@ -10,14 +12,15 @@ namespace Ticketing_Screen_Designer.Repositories
         IGetAllRepository<ServiceType>
     {
         public ServiceRepository(string connectionString) : base(connectionString) { }
-        public ServiceType GetById(int id)
+        public ServiceType GetById(int serviceId)
         {
-            string query = @"SELECT ServiceID, ServicesName FROM Services WHERE ServiceID = @ServiceID";
-            using (var conn = new SqlConnection(ConnectionString))
+            string query = @"SELECT ServiceID, ServicesName FROM Services WHERE ServiceID = @ServiceID;";
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = serviceId;
                     conn.Open();
 
                     using (var reader = cmd.ExecuteReader())
@@ -33,15 +36,27 @@ namespace Ticketing_Screen_Designer.Repositories
                         }
                     }
                 }
+
+                return null;
             }
-            return null;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ServiceRepository.GetById for ID: {serviceId} ", serviceId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ServiceRepository.GetById for ID: {serviceId} ", serviceId);
+                throw;
+            }
         }
         public IEnumerable<ServiceType> GetAll()
         {
-            string query = @"SELECT ServiceID, ServicesName FROM Services";
+            string query = @"SELECT ServiceID, ServicesName FROM Services;";
             List<ServiceType> services = new List<ServiceType>();
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
                     conn.Open();
@@ -64,8 +79,19 @@ namespace Ticketing_Screen_Designer.Repositories
                     }
 
                 }
+
+                return services;
             }
-            return services;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ServiceRepository.GetAll");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ServiceRepository.GetAll");
+                throw;
+            }
 
         }
     }

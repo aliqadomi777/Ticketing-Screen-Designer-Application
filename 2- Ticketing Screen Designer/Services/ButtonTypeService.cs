@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Ticketing_Screen_Designer.DTO.ButtonTypes;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Interfaces.Services;
 using Ticketing_Screen_Designer.Models;
+using Ticketing_Screen_Designer.Utils;
 namespace Ticketing_Screen_Designer.Services
 {
     public class ButtonTypeService : IButtonTypeService
@@ -17,27 +21,45 @@ namespace Ticketing_Screen_Designer.Services
 
         public ButtonTypeResponseDto GetButtonType(int typeId)
         {
-            var buttonType = _fetchRepository.GetById(typeId);
-            return new ButtonTypeResponseDto
+            if (typeId <= 0)
             {
-                TypeId = buttonType.TypeId,
-                TypeName = buttonType.TypeName
-            };
+                throw new ArgumentException("type ID must be a positive non-zero integer.", nameof(typeId));
+            }
+
+            try
+            {
+                var buttonType = _fetchRepository.GetById(typeId);
+                return new ButtonTypeResponseDto
+                {
+                    TypeId = buttonType.TypeId,
+                    TypeName = buttonType.TypeName
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed executing query for button type with ID: {typeId}", typeId);
+                throw new DataAccessException($"Could not retrieve profile records for Type ID {typeId}.", ex);
+            }
         }
 
         public List<ButtonTypeResponseDto> GetAllButtonTypes()
         {
-            List<ButtonTypeResponseDto> buttonTypesList = new List<ButtonTypeResponseDto>();
-            var buttonTypes = _fetchAllRepository.GetAll();
-            foreach (var buttonType in buttonTypes)
+            try
             {
-                buttonTypesList.Add(new ButtonTypeResponseDto
+                var buttonTypes = _fetchAllRepository.GetAll();
+                return buttonTypes.Select(buttonType => new ButtonTypeResponseDto
                 {
                     TypeId = buttonType.TypeId,
                     TypeName = buttonType.TypeName
-                });
+                }).ToList();
             }
-            return buttonTypesList;
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed executing query retrieving all button types: {bankId}");
+                throw new DataAccessException("Could not retrieve All button types", ex);
+            }
+
+
         }
     }
 }

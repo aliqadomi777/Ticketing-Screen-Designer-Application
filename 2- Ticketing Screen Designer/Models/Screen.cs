@@ -6,7 +6,7 @@ namespace Ticketing_Screen_Designer.Models
     {
         public int ScreenId { get; set; }
         public string ScreenName { get; set; }
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
         public DateTimeOffset ModifiedAt { get; set; } = DateTimeOffset.UtcNow;
         public int BankId { get; set; }
     }

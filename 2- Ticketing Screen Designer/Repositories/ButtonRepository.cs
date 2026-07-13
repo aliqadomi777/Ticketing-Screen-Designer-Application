@@ -1,13 +1,16 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
+using Ticketing_Screen_Designer.Utils;
 namespace Ticketing_Screen_Designer.Repositories
 {
     public class ButtonRepository : BaseRepository,
         IButtonRepository<ButtonModel>,
+        IAddableRepository<ButtonModel>,
         IAddableRepository<MessageModel>,
         IAddableRepository<TicketModel>,
         IDeleteableRepository<ButtonModel>,
@@ -15,7 +18,7 @@ namespace Ticketing_Screen_Designer.Repositories
         IUpdateableRepository<ButtonModel>
     {
         public ButtonRepository(string connectionString) : base(connectionString) { }
-        public ButtonModel GetById(int id, int buttonType)
+        public ButtonModel GetById(int buttonId, int buttonType)
         {
             string query = string.Empty;
             if (buttonType == 1)
@@ -34,11 +37,12 @@ namespace Ticketing_Screen_Designer.Repositories
                 FROM Buttons B INNER JOIN Messages M ON B.ButtonID = M.ButtonID
                 WHERE B.ButtonID = @ButtonID;";
             }
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
                     conn.Open();
 
                     using (var reader = cmd.ExecuteReader())
@@ -84,11 +88,23 @@ namespace Ticketing_Screen_Designer.Repositories
                     }
                 }
 
+
+                return null;
             }
-            return null;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonRepository.GetById for ID: {buttonId} ", buttonId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.GetById for ID: {buttonId} ", buttonId);
+                throw;
+            }
         }
 
-        public IEnumerable<ButtonModel> GetAll(int id)
+
+        public IEnumerable<ButtonModel> GetAll(int screenId)
         {
             string query = @"
             SELECT B.ButtonID, B.ButtonNameEN, B.ButtonNameAR, B.ButtonType, B.ScreenID, B.ModifiedAt, BT.TypeName
@@ -97,12 +113,13 @@ namespace Ticketing_Screen_Designer.Repositories
 
             List<ButtonModel> buttons = new List<ButtonModel>();
 
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
 
-                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = screenId;
                     conn.Open();
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -135,55 +152,104 @@ namespace Ticketing_Screen_Designer.Repositories
                     }
 
                 }
+
+                return buttons;
             }
-            return buttons;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonRepository.GetAll for ID: {screenId} ", screenId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.GetAll for ID: {screenId} ", screenId);
+                throw;
+            }
 
         }
 
-        public int Add(TicketModel model)
+        public int Add(ButtonModel buttonModel)
         {
             string query = @"
             INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
             VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
+            SELECT CAST(SCOPE_IDENTITY() as int);";
+            try
+            {
+                using (var conn = new SqlConnection(ConnectionString))
+                using (var cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = buttonModel.ScreenId;
+                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = buttonModel.ButtonNameAR;
+                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = buttonModel.ButtonNameEN;
+                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = buttonModel.ButtonType;
+                    conn.Open();
+                    if (cmd.ExecuteScalar() is int newId)
+                    {
+                        return newId;
+                    }
+                    throw new InvalidOperationException("Database failed to return a valid identity ID.");
+
+                }
+            }
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonRepository.Add for model: {@buttonModel} ", buttonModel);
+                if (ex.Number == 2627 || ex.Number == 2601)
+                {
+                    throw new DuplicateRecordException($"A button with the same naming already exist on screen for ID {buttonModel.ScreenId}", ex);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Add");
+                throw;
+            }
+        }
+        public int Add(TicketModel ticketModel)
+        {
+            string query = @"
+            INSERT INTO Buttons(ButtonNameEN, ButtonNameAR, ButtonType, ScreenID)
+            VALUES(@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
 
             DECLARE @NewButtonID INT = SCOPE_IDENTITY();
 
-            INSERT INTO Tickets (ButtonID, ServiceID) 
-            VALUES (@NewButtonID, @ServiceID);
+            INSERT INTO Tickets(ButtonID, ServiceID)
+            VALUES(@NewButtonID, @ServiceID);
 
-            SELECT @NewButtonID;";
+            SELECT @NewButtonID; ";
 
             using (var conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
+                using (var cmd = new SqlCommand(query, conn, transaction))
                 {
-                    using (var cmd = new SqlCommand(query, conn, transaction))
+                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = ticketModel.ButtonNameEN;
+                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = ticketModel.ButtonNameAR;
+                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = ticketModel.ButtonType;
+                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = ticketModel.ScreenId;
+                    cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = ticketModel.ServiceId;
+                    try
                     {
-                        cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = model.ButtonNameEN;
-                        cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = model.ButtonNameAR;
-                        cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = model.ButtonType;
-                        cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = model.ScreenId;
-                        cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = model.ServiceId;
-                        try
-                        {
-                            int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
-                            transaction.Commit();
+                        int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
+                        transaction.Commit();
 
-                            return generatedId;
-                        }
-                        catch (Exception e)
-                        {
-                            transaction.Rollback();
-                            throw new InvalidOperationException("", e);
+                        return generatedId;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new InvalidOperationException("", e);
 
-                        }
                     }
                 }
+
             }
         }
 
-        public int Add(MessageModel model)
+        public int Add(MessageModel messageModel)
         {
             string query = @"
             INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
@@ -200,68 +266,91 @@ namespace Ticketing_Screen_Designer.Repositories
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
+                using (var cmd = new SqlCommand(query, conn, transaction))
                 {
-                    using (var cmd = new SqlCommand(query, conn, transaction))
+                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = messageModel.ButtonNameEN;
+                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = messageModel.ButtonNameAR;
+                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = messageModel.ButtonType;
+                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = messageModel.ScreenId;
+                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = messageModel.MessageEN;
+                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = messageModel.MessageAR;
+
+                    try
                     {
-                        cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = model.ButtonNameEN;
-                        cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = model.ButtonNameAR;
-                        cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = model.ButtonType;
-                        cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = model.ScreenId;
-                        cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = model.MessageEN;
-                        cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = model.MessageAR;
 
-                        try
-                        {
+                        int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
+                        transaction.Commit();
 
-                            int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
-                            transaction.Commit();
-
-                            return generatedId;
-                        }
-                        catch (Exception e)
-                        {
-                            transaction.Rollback();
-                            throw new InvalidOperationException("", e);
-                        }
+                        return generatedId;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new InvalidOperationException("", e);
                     }
                 }
+
             }
         }
 
-        public bool Update(ButtonModel model)
+        public bool Update(ButtonModel buttonModel)
         {
             string query = @"
             UPDATE Buttons 
             SET ButtonNameEN=@ButtonNameEN, ButtonNameAR=@ButtonNameAR, ButtonType=@ButtonType
             WHERE ButtonID=@ButtonID;";
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = model.ButtonNameEN;
-                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = model.ButtonNameAR;
-                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = model.ButtonType;
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = model.ButtonId;
+                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = buttonModel.ButtonNameEN;
+                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = buttonModel.ButtonNameAR;
+                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = buttonModel.ButtonType;
+                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonModel.ButtonId;
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
                     return rowsAffected > 0;
                 }
             }
-        }
-        public bool Delete(int id)
-        {
-            string query = @"DELETE FROM Buttons WHERE ButtonID = @ButtonID";
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonRepository.Update for model: {@buttonModel} ", buttonModel);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Update");
+                throw;
+            }
 
-            using (var conn = new SqlConnection(ConnectionString))
+        }
+        public bool Delete(int buttonId)
+        {
+            string query = @"DELETE FROM Buttons WHERE ButtonID = @ButtonID;";
+
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
                     return rowsAffected > 0;
                 }
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonRepository.Delete model by ID: {buttonId} ", buttonId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Delete");
+                throw;
+            }
+
         }
 
     }

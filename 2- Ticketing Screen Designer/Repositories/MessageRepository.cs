@@ -1,74 +1,116 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Models;
+using Ticketing_Screen_Designer.Utils;
 namespace Ticketing_Screen_Designer.Repositories
 {
     public class MessageRepository : BaseRepository,
         IDeleteableRepository<MessageModel>,
         IAddableRepository<MessageModel>,
-        ITicketRepository<MessageModel>
+        IUpdateableRepository<MessageModel>
     {
         public MessageRepository(string connectionString) : base(connectionString) { }
-        public int Add(MessageModel model)
+        public int Add(MessageModel messageModel)
         {
             string query = @"
             INSERT INTO Messages (ButtonID, MessageEN, MessageAR) 
             VALUES (@ButtonID, @MessageEN, @MessageAR);
             SELECT CAST(SCOPE_IDENTITY() as int);";
-
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = model.ButtonId;
-                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = model.MessageEN;
-                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = model.MessageAR;
+                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = messageModel.ButtonId;
+                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = messageModel.MessageEN;
+                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = messageModel.MessageAR;
                     conn.Open();
                     if (cmd.ExecuteScalar() is int newId)
                     {
                         return newId;
                     }
-                    throw new Exception();
+                    throw new InvalidOperationException("Database failed to return a valid identity ID.");
 
                 }
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside MessageRepository.Add for model: {@messageModel} ", messageModel);
+                if (ex.Number == 2627 || ex.Number == 2601)
+                {
+                    throw new DuplicateRecordException($"A Message already exists for the same Button with ID {messageModel.ButtonId}. ", ex);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in MessageRepository.Add");
+                throw;
+            }
         }
-        public bool Update(int serviceId, MessageModel model)
+
+        public bool Update(MessageModel messageModel)
         {
             string query = @"
             UPDATE Messages 
             SET MessageEN=@MessageEN, MessageAR=@MessageAR
             WHERE MessageID=@MessageID;";
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = model.ButtonId;
-                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = model.MessageEN;
-                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = model.MessageAR;
+                    cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = messageModel.ButtonId;
+                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = messageModel.MessageEN;
+                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = messageModel.MessageAR;
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
                     return rowsAffected > 0;
                 }
             }
-        }
-        public bool Delete(int id)
-        {
-            string query = @"DELETE FROM Messages WHERE MessageID = @MessageID";
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside MessageRepository.Update for model: {@messageModel} ", messageModel);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in MessageRepository.Update");
+                throw;
+            }
 
-            using (var conn = new SqlConnection(ConnectionString))
+
+        }
+        public bool Delete(int messagId)
+        {
+            string query = @"DELETE FROM Messages WHERE MessageID = @MessageID;";
+            try
             {
+
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = messagId;
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
                     return rowsAffected > 0;
                 }
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside MessageRepository.Delete model by ID: {messagId} ", messagId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in MessageRepository.Delete");
+                throw;
+            }
         }
+
 
 
     }

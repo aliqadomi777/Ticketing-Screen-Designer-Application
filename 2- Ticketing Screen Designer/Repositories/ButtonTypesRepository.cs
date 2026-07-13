@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Serilog;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
@@ -10,14 +12,15 @@ namespace Ticketing_Screen_Designer.Repositories
         IGetAllRepository<ButtonTypes>
     {
         public ButtonTypeRepository(string connectionString) : base(connectionString) { }
-        public ButtonTypes GetById(int id)
+        public ButtonTypes GetById(int typeId)
         {
-            string query = @"SELECT TypeID, TypeName FROM ButtonTypes WHERE TypeID = @TypeID";
-            using (var conn = new SqlConnection(ConnectionString))
+            string query = @"SELECT TypeID, TypeName FROM ButtonTypes WHERE TypeID = @TypeID;";
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@TypeID", SqlDbType.Int).Value = id;
+                    cmd.Parameters.Add("@TypeID", SqlDbType.Int).Value = typeId;
                     conn.Open();
 
                     using (var reader = cmd.ExecuteReader())
@@ -33,16 +36,28 @@ namespace Ticketing_Screen_Designer.Repositories
                         }
                     }
                 }
+
+                return null;
             }
-            return null;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonTypesRepository.GetById for ID: {typeId} ", typeId);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonTypesRepository.GetById for ID: {typeId} ", typeId);
+                throw;
+            }
 
         }
         public IEnumerable<ButtonTypes> GetAll()
         {
-            string query = @"SELECT TypeID, TypeName FROM ButtonTypes";
+            string query = @"SELECT TypeID, TypeName FROM ButtonTypes;";
             List<ButtonTypes> buttonTypes = new List<ButtonTypes>();
-            using (var conn = new SqlConnection(ConnectionString))
+            try
             {
+                using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
                     conn.Open();
@@ -66,8 +81,19 @@ namespace Ticketing_Screen_Designer.Repositories
 
                 }
 
+
+                return buttonTypes;
             }
-            return buttonTypes;
+            catch (SqlException ex)
+            {
+                Log.Error(ex, "Failed database operation inside ButtonTypesRepository.GetAll");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Critical, unexpected system error in ButtonTypesRepository.GetAll");
+                throw;
+            }
         }
     }
 }
