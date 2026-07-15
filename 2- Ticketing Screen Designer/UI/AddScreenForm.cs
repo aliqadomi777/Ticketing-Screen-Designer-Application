@@ -30,6 +30,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void AddScreenForm_Load(object sender, EventArgs e)
         {
+            NewScreenInactiveButton.Checked = true;
 
         }
 
@@ -48,6 +49,10 @@ namespace _2__Ticketing_Screen_Designer.UI
                 if (newScreenId > 0)
                 {
                     MessageBox.Show("Screen added successfully!");
+                    NewScreenNameTextBox.Text = string.Empty;
+                    NewScreenActiveButton.Checked = false;
+                    NewScreenInactiveButton.Checked = true;
+
                 }
                 else
                 {

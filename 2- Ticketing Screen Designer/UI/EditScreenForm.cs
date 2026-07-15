@@ -1,39 +1,42 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.Interfaces.Services;
+using Ticketing_Screen_Designer.Utils;
 
 
 namespace _2__Ticketing_Screen_Designer.UI
 {
 
-    //private readonly IButtonService _buttonService;
     public partial class EditScreenForm : Form
     {
         private readonly IScreenService _screenService;
         private readonly IServiceProvider _serviceProvider;
-        public EditScreenForm(IScreenService screenService, IServiceProvider serviceProvider)
+        private readonly IUiStateService _stateService;
+        private readonly IButtonService _buttonService;
+        public EditScreenForm(IScreenService screenService,
+            IServiceProvider serviceProvider, IUiStateService stateService,
+            IButtonService buttonService)
         {
             InitializeComponent();
             _screenService = screenService;
             _serviceProvider = serviceProvider;
+            _stateService = stateService;
+            _buttonService = buttonService;
             this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
 
             ButtonsList.BackColor = ColorTranslator.FromHtml("#FFFFFF");
             ButtonsList.ForeColor = ColorTranslator.FromHtml("#333333");
 
             AddButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
-            EditButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
+            EditButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
             DeleteButton.BackColor = ColorTranslator.FromHtml("#D83B01");
 
         }
-        //public void InitializeScreenData(ScreenResponseDto screenDetails)
-        //{
-        //    ScreenName.Text = screenDetails.ScreenName;
-        //    ActivateButton.Checked = screenDetails.IsActive;
-        //    DeactivateButton.Checked = !screenDetails.IsActive;
-        //}
+
 
         private void label1_Click(object sender, EventArgs e)
         {
@@ -57,6 +60,153 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+
+        }
+
+        private void SaveButton_Click(object sender, EventArgs e)
+        {
+            // updated 2 active screens at the same time handle 
+            var screenDetails = _stateService.Get<ScreenResponseDto>();
+
+            bool isActivatedCurrent = ActivateButton.Checked;
+            string currentName = ScreenNameTextBox.Text.Trim();
+            try
+            {
+                if (currentName != screenDetails.ScreenName || isActivatedCurrent != screenDetails.IsActive)
+                {
+                    bool isUpdated = _screenService.UpdateScreen(new BaseScreenRequestDto
+                    {
+                        screenId = screenDetails.ScreenId,
+                        ScreenName = currentName,
+                        IsActive = isActivatedCurrent,
+                    });
+
+                    if (isUpdated)
+                    {
+                        var updatedScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
+                        _stateService.Set(updatedScreen);
+                        MessageBox.Show($"Updated correctly with the new name {updatedScreen.ScreenName}");
+                    }
+                }
+            }
+            catch (ExcessiveScreenActivationException)
+            {
+                MessageBox.Show("A screen is already active");
+            }
+
+
+        }
+
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void AddButton_Click(object sender, EventArgs e)
+        {
+            var editButton = _serviceProvider.GetRequiredService<AddEditButton>();
+            editButton.Show();
+            this.Hide();
+        }
+
+        private void EditButton_Click(object sender, EventArgs e)
+        {
+            if (ButtonsList.SelectedItem is BaseButtonResponseDto selectedButton)
+            {
+                int buttonIdToEdit = selectedButton.ButtonId;
+                var button = _buttonService.GetButtonDetails(buttonIdToEdit, selectedButton.ButtonType);
+                if (button != null)
+                {
+                    _stateService.Set(button);
+                    var editButton = _serviceProvider.GetRequiredService<AddEditButton>();
+                    editButton.Show();
+                    this.Hide();
+                }
+
+                else
+                {
+                    MessageBox.Show("This button has been deleted by someone");
+                    refreshList();
+                }
+
+            }
+
+
+            else
+            {
+                MessageBox.Show("Please select a button to Edit.");
+            }
+        }
+
+        private void DeleteButton_Click(object sender, EventArgs e)
+        {
+            if (ButtonsList.SelectedItem is BaseButtonResponseDto selectedButton)
+            {
+                int buttonIdToDelete = selectedButton.ButtonId;
+                DialogResult confirm = MessageBox.Show(
+                    $"Are you sure you want to delete the button : {selectedButton.ButtonNameEN}?",
+                    "Delete Screen",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+                if (confirm == DialogResult.Yes)
+                {
+                    if (_buttonService.DeleteButton(buttonIdToDelete))
+                    {
+                        MessageBox.Show($"Successfully initiated deletion for Screen : {selectedButton.ButtonNameEN}");
+
+
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Button is already deleted");
+                    }
+                    ButtonsList.Items.Remove(selectedButton);
+                    ButtonsList.ClearSelected();
+                }
+
+            }
+            else
+            {
+                MessageBox.Show("Please select a screen to delete.");
+            }
+        }
+
+        private void EditScreenForm_Load(object sender, EventArgs e)
+        {
+            refreshList();
+
+
+        }
+
+
+        public void refreshList()
+        {
+            ButtonsList.Items.Clear();
+            var screenDetails = _stateService.Get<ScreenResponseDto>();
+
+            ScreenNameTextBox.Text = screenDetails.ScreenName;
+            ActivateButton.Checked = screenDetails.IsActive;
+            DeactivateButton.Checked = !screenDetails.IsActive;
+
+            if (screenDetails != null)
+            {
+                var buttons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                ButtonsList.DisplayMember = "DisplayText";
+                foreach (var button in buttons)
+                {
+                    ButtonsList.Items.Add(button);
+                }
+            }
+        }
+
+        private void EditScreenForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (Application.OpenForms["MainForm"] is MainForm mainForm)
+            {
+                mainForm.refreshList();
+                mainForm.Show();
+            }
 
         }
     }

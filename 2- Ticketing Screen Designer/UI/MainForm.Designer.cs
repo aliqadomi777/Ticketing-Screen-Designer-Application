@@ -61,7 +61,7 @@
             // 
             // DeleteScreenButton
             // 
-            this.DeleteScreenButton.Location = new System.Drawing.Point(175, 148);
+            this.DeleteScreenButton.Location = new System.Drawing.Point(367, 148);
             this.DeleteScreenButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.DeleteScreenButton.Name = "DeleteScreenButton";
             this.DeleteScreenButton.Size = new System.Drawing.Size(152, 49);
@@ -72,7 +72,7 @@
             // 
             // EditScreenButton
             // 
-            this.EditScreenButton.Location = new System.Drawing.Point(349, 148);
+            this.EditScreenButton.Location = new System.Drawing.Point(185, 148);
             this.EditScreenButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.EditScreenButton.Name = "EditScreenButton";
             this.EditScreenButton.Size = new System.Drawing.Size(152, 49);

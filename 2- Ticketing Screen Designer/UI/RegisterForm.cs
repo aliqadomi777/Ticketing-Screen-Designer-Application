@@ -46,12 +46,16 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void button2_Click(object sender, EventArgs e)
         {
+
             this.Close();
         }
 
         private void RegisterForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-
+            if (Application.OpenForms["LoginForm"] is LoginForm loginForm)
+            {
+                loginForm.Show();
+            }
         }
 
         private void label1_Click(object sender, EventArgs e)

@@ -79,16 +79,16 @@ namespace Ticketing_Screen_Designer.Repositories
             }
 
         }
-        public bool Delete(int ticketId)
+        public bool Delete(int buttonId)
         {
-            string query = @"DELETE FROM Tickets WHERE TicketID = @TicketID;";
+            string query = @"DELETE FROM Tickets WHERE ButtonID = @ButtonID;";
 
             try
             {
                 using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.Add("@TicketID", SqlDbType.Int).Value = ticketId;
+                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
                     conn.Open();
                     int rowsAffected = cmd.ExecuteNonQuery();
                     return rowsAffected > 0;
@@ -96,7 +96,7 @@ namespace Ticketing_Screen_Designer.Repositories
             }
             catch (SqlException ex)
             {
-                Log.Error(ex, "Failed database operation inside TicketRepository.Delete model by ID: {ticketId} ", ticketId);
+                Log.Error(ex, "Failed database operation inside TicketRepository.Delete model by ID: {buttonId} ", buttonId);
                 throw;
             }
             catch (Exception ex)

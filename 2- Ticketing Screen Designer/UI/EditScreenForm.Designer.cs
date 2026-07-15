@@ -30,7 +30,7 @@
         {
             this.ScreenNameLabel = new System.Windows.Forms.Label();
             this.StatusLabel = new System.Windows.Forms.Label();
-            this.ScreenName = new System.Windows.Forms.TextBox();
+            this.ScreenNameTextBox = new System.Windows.Forms.TextBox();
             this.ActivateButton = new System.Windows.Forms.RadioButton();
             this.DeactivateButton = new System.Windows.Forms.RadioButton();
             this.ButtonsList = new System.Windows.Forms.ListBox();
@@ -63,13 +63,13 @@
             this.StatusLabel.TabIndex = 1;
             this.StatusLabel.Text = "Status";
             // 
-            // ScreenName
+            // ScreenNameTextBox
             // 
-            this.ScreenName.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.ScreenName.Location = new System.Drawing.Point(102, 40);
-            this.ScreenName.Name = "ScreenName";
-            this.ScreenName.Size = new System.Drawing.Size(718, 30);
-            this.ScreenName.TabIndex = 2;
+            this.ScreenNameTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.ScreenNameTextBox.Location = new System.Drawing.Point(102, 40);
+            this.ScreenNameTextBox.Name = "ScreenNameTextBox";
+            this.ScreenNameTextBox.Size = new System.Drawing.Size(718, 30);
+            this.ScreenNameTextBox.TabIndex = 2;
             // 
             // ActivateButton
             // 
@@ -123,6 +123,7 @@
             this.EditButton.TabIndex = 9;
             this.EditButton.Text = "Edit Button";
             this.EditButton.UseVisualStyleBackColor = true;
+            this.EditButton.Click += new System.EventHandler(this.EditButton_Click);
             // 
             // DeleteButton
             // 
@@ -132,6 +133,7 @@
             this.DeleteButton.TabIndex = 8;
             this.DeleteButton.Text = "Delete Button";
             this.DeleteButton.UseVisualStyleBackColor = true;
+            this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
             // 
             // AddButton
             // 
@@ -141,6 +143,7 @@
             this.AddButton.TabIndex = 7;
             this.AddButton.Text = "Add Button";
             this.AddButton.UseVisualStyleBackColor = true;
+            this.AddButton.Click += new System.EventHandler(this.AddButton_Click);
             // 
             // SaveButton
             // 
@@ -150,6 +153,7 @@
             this.SaveButton.TabIndex = 13;
             this.SaveButton.Text = "Save";
             this.SaveButton.UseVisualStyleBackColor = true;
+            this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
             // 
             // CancelButton
             // 
@@ -159,8 +163,9 @@
             this.CancelButton.TabIndex = 12;
             this.CancelButton.Text = "Cancel";
             this.CancelButton.UseVisualStyleBackColor = true;
+            this.CancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
-            // AddEditScreen
+            // EditScreenForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(924, 717);
@@ -173,14 +178,16 @@
             this.Controls.Add(this.ButtonsList);
             this.Controls.Add(this.DeactivateButton);
             this.Controls.Add(this.ActivateButton);
-            this.Controls.Add(this.ScreenName);
+            this.Controls.Add(this.ScreenNameTextBox);
             this.Controls.Add(this.StatusLabel);
             this.Controls.Add(this.ScreenNameLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "AddEditScreen";
+            this.Name = "EditScreenForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AddEditScreen";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EditScreenForm_FormClosed);
+            this.Load += new System.EventHandler(this.EditScreenForm_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -190,7 +197,7 @@
 
         private System.Windows.Forms.Label ScreenNameLabel;
         private System.Windows.Forms.Label StatusLabel;
-        private System.Windows.Forms.TextBox ScreenName;
+        private System.Windows.Forms.TextBox ScreenNameTextBox;
         private System.Windows.Forms.RadioButton ActivateButton;
         private System.Windows.Forms.RadioButton DeactivateButton;
         private System.Windows.Forms.ListBox ButtonsList;

@@ -114,6 +114,10 @@ namespace Ticketing_Screen_Designer.Services
                 bool isUpdated = _updateRepository.Update(screenModel);
                 return isUpdated;
             }
+            catch (ExcessiveScreenActivationException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 Log.Error(ex, "Unexpected failure during Screen Updating process.");

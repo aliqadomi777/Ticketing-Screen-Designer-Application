@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Banks;
@@ -50,18 +49,26 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            var bankSession = _stateService.Get<BankResponseDto>();
-            TitleLabel.Text = $"Main Form - {bankSession.BankName}";
+
+
 
 
             refreshList();
 
         }
-
+        public void centerTitle()
+        {
+            int titleWidth = TextRenderer.MeasureText(ScreenTitleLabel.Text, ScreenTitleLabel.Font).Width;
+            int formWidth = this.ClientSize.Width;
+            int startingLeft = (formWidth - titleWidth) / 2;
+            ScreenTitleLabel.Left = startingLeft;
+        }
         public void refreshList()
         {
+            screenList.Items.Clear();
             var bankSession = _stateService.Get<BankResponseDto>();
-
+            TitleLabel.Text = $"Main Form - {bankSession.BankName}";
+            centerTitle();
             if (bankSession != null)
             {
                 var screens = _screenService.GetAllScreensDetails(bankSession.BankId);
@@ -115,7 +122,32 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void EditScreenButton_Click(object sender, EventArgs e)
         {
+            if (screenList.SelectedItem is ScreenResponseDto selectedScreen)
+            {
+                int screenIdToEdit = selectedScreen.ScreenId;
+                string screenName = selectedScreen.ScreenName;
+                var screen = _screenService.GetScreenDetails(screenIdToEdit);
+                if (screen != null)
+                {
+                    _stateService.Set(screen);
+                    var editScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
+                    editScreen.Show();
+                    this.Hide();
+                }
 
+                else
+                {
+                    MessageBox.Show("This screen has been deleted by someone");
+                    refreshList();
+                }
+
+            }
+
+
+            else
+            {
+                MessageBox.Show("Please select a screen to Edit.");
+            }
         }
 
         private void AddScreenButton_Click(object sender, EventArgs e)

@@ -82,14 +82,6 @@ namespace _2__Ticketing_Screen_Designer.UI
         private void RegisterButton_Click(object sender, EventArgs e)
         {
             var registerForm = _serviceProvider.GetRequiredService<RegisterForm>();
-            FormClosedEventHandler handler = null;
-            handler = (s, args) =>
-            {
-                registerForm.FormClosed -= handler;
-                this.Show();
-            };
-
-            registerForm.FormClosed += handler;
             registerForm.Show();
             this.Hide();
         }

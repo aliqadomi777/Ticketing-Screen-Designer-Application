@@ -8,5 +8,14 @@ namespace Ticketing_Screen_Designer.DTO.Buttons
         public DateTimeOffset ModifiedAt { get; set; }
         public string TypeName { get; set; }
 
+
+        public string DisplayText
+        {
+            get
+            {
+                return $"{base.ButtonNameEN} - {base.ButtonNameAR} | {TypeName}";
+            }
+        }
+
     }
 }

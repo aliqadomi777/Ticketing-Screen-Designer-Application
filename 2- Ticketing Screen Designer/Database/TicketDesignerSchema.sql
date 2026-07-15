@@ -9,6 +9,10 @@ IF OBJECT_ID('dbo.Services', 'U') IS NOT NULL DROP TABLE dbo.Services;
 IF OBJECT_ID('dbo.ButtonTypes', 'U') IS NOT NULL DROP TABLE dbo.ButtonTypes;
 IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
 */ 
+CREATE DATABASE ticketDesignerDB;
+GO
+USE ticketDesignerDB;
+GO
 
 CREATE TABLE Banks (
     BankID INT PRIMARY KEY IDENTITY ,
@@ -90,7 +94,6 @@ AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
-    -- Break recursion if only ModifiedAt was updated
     IF UPDATE(ModifiedAt) RETURN;
 
     UPDATE s
@@ -100,24 +103,17 @@ BEGIN
 END;
 GO
 
--- Updates Buttons timestamp AND conditionally bubbles up to Screens
 CREATE TRIGGER dbo.triggerModifiedAt_Buttons
 ON dbo.Buttons
 AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
-    -- Break recursion if only ModifiedAt was updated
     IF UPDATE(ModifiedAt) RETURN;
-
-    -- Update own timestamp
     UPDATE b
     SET b.ModifiedAt = SYSUTCDATETIME()
     FROM dbo.Buttons b
     INNER JOIN inserted i ON b.ButtonID = i.ButtonID;
-
-    -- Bubble up to Screens ONLY if the update came from Buttons directly
-    -- (We check TRIGGER_NESTLEVEL to ensure this wasn't fired by Tickets/Messages triggers)
     IF TRIGGER_NESTLEVEL(@@PROCID, 'AFTER', 'DML') = 1
     BEGIN
         UPDATE s
@@ -143,7 +139,6 @@ BEGIN
 END;
 GO
 
--- Updates parent Button when Message changes
 CREATE TRIGGER dbo.triggerModifiedAt_Messages
 ON dbo.Messages
 AFTER UPDATE

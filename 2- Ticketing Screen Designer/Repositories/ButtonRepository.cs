@@ -11,8 +11,6 @@ namespace Ticketing_Screen_Designer.Repositories
     public class ButtonRepository : BaseRepository,
         IButtonRepository<ButtonModel>,
         IAddableRepository<ButtonModel>,
-        IAddableRepository<MessageModel>,
-        IAddableRepository<TicketModel>,
         IDeleteableRepository<ButtonModel>,
         IListableRepository<ButtonModel>,
         IUpdateableRepository<ButtonModel>
@@ -207,91 +205,7 @@ namespace Ticketing_Screen_Designer.Repositories
                 throw;
             }
         }
-        public int Add(TicketModel ticketModel)
-        {
-            string query = @"
-            INSERT INTO Buttons(ButtonNameEN, ButtonNameAR, ButtonType, ScreenID)
-            VALUES(@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
 
-            DECLARE @NewButtonID INT = SCOPE_IDENTITY();
-
-            INSERT INTO Tickets(ButtonID, ServiceID)
-            VALUES(@NewButtonID, @ServiceID);
-
-            SELECT @NewButtonID; ";
-
-            using (var conn = new SqlConnection(ConnectionString))
-            {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
-                using (var cmd = new SqlCommand(query, conn, transaction))
-                {
-                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = ticketModel.ButtonNameEN;
-                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = ticketModel.ButtonNameAR;
-                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = ticketModel.ButtonType;
-                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = ticketModel.ScreenId;
-                    cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = ticketModel.ServiceId;
-                    try
-                    {
-                        int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
-                        transaction.Commit();
-
-                        return generatedId;
-                    }
-                    catch (Exception e)
-                    {
-                        transaction.Rollback();
-                        throw new InvalidOperationException("", e);
-
-                    }
-                }
-
-            }
-        }
-
-        public int Add(MessageModel messageModel)
-        {
-            string query = @"
-            INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
-            VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
-
-            DECLARE @NewButtonID INT = SCOPE_IDENTITY();
-
-            INSERT INTO Messages (MessageEN, MessageAR, ButtonID) 
-            VALUES (@MessageEN, @MessageAR, @NewButtonID);
-
-            SELECT @NewButtonID;";
-
-            using (var conn = new SqlConnection(ConnectionString))
-            {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
-                using (var cmd = new SqlCommand(query, conn, transaction))
-                {
-                    cmd.Parameters.Add("@ButtonNameEN", SqlDbType.NVarChar, 100).Value = messageModel.ButtonNameEN;
-                    cmd.Parameters.Add("@ButtonNameAR", SqlDbType.NVarChar, 100).Value = messageModel.ButtonNameAR;
-                    cmd.Parameters.Add("@ButtonType", SqlDbType.Int).Value = messageModel.ButtonType;
-                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = messageModel.ScreenId;
-                    cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = messageModel.MessageEN;
-                    cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = messageModel.MessageAR;
-
-                    try
-                    {
-
-                        int generatedId = Convert.ToInt32(cmd.ExecuteScalar());
-                        transaction.Commit();
-
-                        return generatedId;
-                    }
-                    catch (Exception e)
-                    {
-                        transaction.Rollback();
-                        throw new InvalidOperationException("", e);
-                    }
-                }
-
-            }
-        }
 
         public bool Update(ButtonModel buttonModel)
         {

@@ -53,11 +53,41 @@ namespace Ticketing_Screen_Designer
             services.AddTransient<IUpdateableRepository<ScreenModel>>(provider => new ScreenRepository(connectionString));
             services.AddTransient<IScreenService, ScreenService>();
 
+
+            services.AddTransient<IButtonRepository<ButtonModel>>(provider => new ButtonRepository(connectionString));
+            services.AddTransient<IAddableRepository<ButtonModel>>(provider => new ButtonRepository(connectionString));
+            services.AddTransient<IDeleteableRepository<ButtonModel>>(provider => new ButtonRepository(connectionString));
+            services.AddTransient<IListableRepository<ButtonModel>>(provider => new ButtonRepository(connectionString));
+            services.AddTransient<IUpdateableRepository<ButtonModel>>(provider => new ButtonRepository(connectionString));
+            services.AddTransient<IButtonService, ButtonService>();
+
+            services.AddTransient<IAddableRepository<TicketModel>>(provider => new TicketRepository(connectionString));
+            services.AddTransient<IDeleteableRepository<TicketModel>>(provider => new TicketRepository(connectionString));
+            services.AddTransient<ITicketRepository<TicketModel>>(provider => new TicketRepository(connectionString));
+            services.AddTransient<ITicketService, TicketService>();
+
+
+            services.AddTransient<IAddableRepository<MessageModel>>(provider => new MessageRepository(connectionString));
+            services.AddTransient<IDeleteableRepository<MessageModel>>(provider => new MessageRepository(connectionString));
+            services.AddTransient<IUpdateableRepository<MessageModel>>(provider => new MessageRepository(connectionString));
+            services.AddTransient<IMessageService, MessageService>();
+
+            services.AddTransient<IGetAllRepository<ButtonTypes>>(provider => new ButtonTypeRepository(connectionString));
+            services.AddTransient<IFetchableRepository<ButtonTypes>>(provider => new ButtonTypeRepository(connectionString));
+            services.AddTransient<IButtonTypeService, ButtonTypeService>();
+
+            services.AddTransient<IGetAllRepository<ServiceType>>(provider => new ServiceRepository(connectionString));
+            services.AddTransient<IFetchableRepository<ServiceType>>(provider => new ServiceRepository(connectionString));
+            services.AddTransient<IServiceTypeService, ServiceTypeService>();
+
             services.AddTransient<LoginForm>();
             services.AddTransient<MainForm>();
             services.AddTransient<RegisterForm>();
             services.AddTransient<EditScreenForm>();
             services.AddTransient<AddScreenForm>();
+            services.AddTransient<AddEditButton>();
+
+
 
 
             using (var serviceProvider = services.BuildServiceProvider())

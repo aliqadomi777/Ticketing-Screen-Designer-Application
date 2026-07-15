@@ -160,12 +160,12 @@ namespace Ticketing_Screen_Designer.Repositories
         }
         public bool Update(ScreenModel screenModel)
         {
-            string deactivateQuery = @"UPDATE Screens SET IsActive=0 WHERE BankID=@BankID AND ScreenID!=@ScreenID;";
-            string query = @"UPDATE Screens SET ScreenName=@ScreenName, IsActive=@IsActive WHERE ScreenID=@ScreenID";
-            if (screenModel.IsActive)
-            {
-                query = deactivateQuery + query;
-            }
+            //string deactivateQuery = @"UPDATE Screens SET IsActive=0 WHERE BankID=@BankID AND ScreenID!=@ScreenID;";
+            string query = @"UPDATE Screens SET ScreenName=@ScreenName, IsActive=@IsActive WHERE ScreenID=@ScreenID;";
+            //if (screenModel.IsActive)
+            //{
+            //    query = deactivateQuery + query;
+            //}
             try
             {
                 using (var conn = new SqlConnection(ConnectionString))
