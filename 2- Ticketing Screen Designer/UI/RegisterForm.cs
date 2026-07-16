@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Banks;
 using Ticketing_Screen_Designer.Interfaces.Services;
+using Ticketing_Screen_Designer.Utils;
 namespace _2__Ticketing_Screen_Designer.UI
 {
     public partial class RegisterForm : Form
@@ -25,10 +26,11 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void button1_Click(object sender, EventArgs e)
         {
+            string newBankName = bankNameTextBox.Text;
             try
             {
 
-                string newBankName = bankNameTextBox.Text;
+
 
                 int newBankId = _bankService.CreateBank(new CreateBankRequestDto
                 {
@@ -37,9 +39,18 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                 MessageBox.Show($"the new bank ID is {newBankId}");
             }
+            catch (DuplicateRecordException)
+            {
+                MessageBox.Show($"A bank with the name {newBankName} already exists");
+            }
+
             catch (ValidationException ex)
             {
                 MessageBox.Show(ex.Message);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("A problem occured while registering new bank");
             }
 
         }

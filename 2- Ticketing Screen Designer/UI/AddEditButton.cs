@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.DTO.ButtonTypes;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.DTO.Services;
 using Ticketing_Screen_Designer.Interfaces.Services;
+using Ticketing_Screen_Designer.Utils;
 
 namespace _2__Ticketing_Screen_Designer.UI
 {
@@ -61,7 +63,7 @@ namespace _2__Ticketing_Screen_Designer.UI
                 ServiceList.Items.Add(serviceType);
             }
             ButtonActionList.SelectedIndex = 0;
-
+            ServiceList.SelectedIndex = 0;
             showHideDetail();
         }
 
@@ -70,12 +72,14 @@ namespace _2__Ticketing_Screen_Designer.UI
 
             var button = _stateService.Get<BaseButtonResponseDto>();
             refreshForm();
-            //for editing existing button
+
+            // Editing Existing Button
             if (button != null)
             {
 
                 ButtonNameEnTextBox.Text = button.ButtonNameEN;
                 ButtonNameArTextBox.Text = button.ButtonNameAR;
+                refreshForm();
                 if (button is TicketButtonResponseDto ticketButton)
                 {
                     ServiceList.SelectedIndex = ServiceList.FindStringExact(ticketButton.ServiceName);
@@ -87,7 +91,6 @@ namespace _2__Ticketing_Screen_Designer.UI
                     EnMessageTextBox.Text = messageButton.MessageEN;
                     ArMessageTextBox.Text = messageButton.MessageAR;
                 }
-                refreshForm();
 
                 ButtonActionList.SelectedIndex = ButtonActionList.FindStringExact(button.TypeName);
 
@@ -95,6 +98,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         }
 
+        //Method to toggle Combo boxes and text boxes based on button action
         private void showHideDetail()
         {
             ServiceLabel.Hide();
@@ -120,6 +124,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
+
             _stateService.Clear<BaseButtonResponseDto>();
 
             this.Close();
@@ -139,7 +144,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
             if (ticketButton != null || messageButton != null)
             {
-
+                //Checks if any changes occured on the existing button info 
                 string originalAction = button.TypeName;
 
                 bool coreChanged = ButtonNameArTextBox.Text != button.ButtonNameAR ||
@@ -156,79 +161,147 @@ namespace _2__Ticketing_Screen_Designer.UI
                                        EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
 
 
-
+                //Editing A button
                 if (ticketChanged || messageChanged || coreChanged)
                 {
-
-
-                    if (selectedAction == "Issue Ticket")
+                    //Detecting button action type change is handled by Backend (Button Repository)
+                    try
                     {
-                        var updatedTicketButton = new UpdateTicketButtonRequest
-                        {
-                            ButtonNameAR = ButtonNameArTextBox.Text,
-                            ButtonNameEN = ButtonNameArTextBox.Text,
-                            ButtonId = button.ButtonId,
-                            ButtonType = selectedButtonType.TypeId,
-                            ServiceId = selectedServiceType.ServiceId,
-                            TicketId = ticketButton?.TicketId ?? 0,
-                        };
 
-                        bool isUpdated = _buttonService.UpdateButton(updatedTicketButton);
+                        bool isUpdated = false;
+                        if (selectedAction == "Issue Ticket")
+                        {
+                            var updatedTicketButton = new UpdateTicketButtonRequest
+                            {
+                                ButtonNameAR = ButtonNameArTextBox.Text,
+                                ButtonNameEN = ButtonNameArTextBox.Text,
+                                ButtonId = button.ButtonId,
+                                ButtonType = selectedButtonType.TypeId,
+                                ServiceId = selectedServiceType.ServiceId,
+                                TicketId = ticketButton?.TicketId ?? 0,
+                            };
+
+                            isUpdated = _buttonService.UpdateButton(updatedTicketButton);
+                        }
+
+
+
+                        else if (selectedAction == "Show Message")
+                        {
+
+                            var updatedMessageButton = new UpdateMessageButtonRequest
+                            {
+                                ButtonNameAR = ButtonNameArTextBox.Text,
+                                ButtonNameEN = ButtonNameArTextBox.Text,
+                                ButtonId = button.ButtonId,
+                                ButtonType = selectedButtonType.TypeId,
+                                messageId = messageButton?.MessageId ?? 0,
+                                MessageAR = ArMessageTextBox.Text,
+                                MessageEN = EnMessageTextBox.Text,
+                            };
+                            isUpdated = _buttonService.UpdateButton(updatedMessageButton);
+
+
+
+                        }
+                        if (!isUpdated)
+                        {
+                            MessageBox.Show("This Button has been deleted by someone else");
+                        }
+                        else if (isUpdated)
+                        {
+                            MessageBox.Show("Button Edited correctly");
+                        }
+                    }
+                    catch (ValidationException ex)
+                    {
+                        MessageBox.Show(ex.Message);
+                    }
+                    catch (DuplicateRecordException)
+                    {
+                        MessageBox.Show("A button with the same Name/s already exists");
                     }
 
-                    else if (selectedAction == "Show Message")
+                    catch (ParentDeletedWithChildConflictException)
                     {
-                        var updatedMessageButton = new UpdateMessageButtonRequest
-                        {
-                            ButtonNameAR = ButtonNameArTextBox.Text,
-                            ButtonNameEN = ButtonNameArTextBox.Text,
-                            ButtonId = button.ButtonId,
-                            ButtonType = selectedButtonType.TypeId,
-                            messageId = messageButton?.MessageId ?? 0,
-                            MessageAR = ArMessageTextBox.Text,
-                            MessageEN = EnMessageTextBox.Text,
-                        };
-                        bool isUpdated = _buttonService.UpdateButton(updatedMessageButton);
+                        MessageBox.Show("The screen holding this button has been deleted");
 
                     }
+
+                    catch (Exception)
+                    {
+                        MessageBox.Show("A problem occured while editing the button");
+
+                    }
+
                 }
             }
 
-
-
+            //Adding A button
             else
             {
-                if (selectedAction == "Issue Ticket")
+                try
                 {
-
-                    var newButton = new CreateTicketButtonRequestDto
+                    int newButtonId = 0;
+                    if (selectedAction == "Issue Ticket")
                     {
-                        ScreenId = screen.ScreenId,
-                        ButtonNameEN = ButtonNameEnTextBox.Text,
-                        ButtonNameAR = ButtonNameArTextBox.Text,
-                        ServiceId = selectedServiceType.ServiceId,
-                        ButtonType = selectedButtonType.TypeId
+
+                        var newButton = new CreateTicketButtonRequestDto
+                        {
+                            ScreenId = screen.ScreenId,
+                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonNameAR = ButtonNameArTextBox.Text,
+                            ServiceId = selectedServiceType.ServiceId,
+                            ButtonType = selectedButtonType.TypeId
 
 
-                    };
-                    int newButtonId = _buttonService.AddButton(newButton);
+                        };
+                        newButtonId = _buttonService.AddButton(newButton);
+                    }
+                    else if (selectedAction == "Show Message")
+                    {
+                        var newButton = new CreateMessageButtonRequestDto
+                        {
+                            ScreenId = screen.ScreenId,
+                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonNameAR = ButtonNameArTextBox.Text,
+                            ButtonType = selectedButtonType.TypeId,
+                            MessageAR = ArMessageTextBox.Text,
+                            MessageEN = EnMessageTextBox.Text
+
+                        };
+                        newButtonId = _buttonService.AddButton(newButton);
+                    }
+
+                    if (newButtonId > 0)
+                    {
+                        MessageBox.Show("New Button has been created correctly");
+
+                    }
                 }
-                else if (selectedAction == "Show Message")
+                catch (ValidationException ex)
                 {
-                    var newButton = new CreateMessageButtonRequestDto
-                    {
-                        ScreenId = screen.ScreenId,
-                        ButtonNameEN = ButtonNameEnTextBox.Text,
-                        ButtonNameAR = ButtonNameArTextBox.Text,
-                        ButtonType = selectedButtonType.TypeId,
-                        MessageAR = ArMessageTextBox.Text,
-                        MessageEN = EnMessageTextBox.Text
+                    MessageBox.Show(ex.Message);
+                }
+                catch (DuplicateRecordException)
+                {
+                    MessageBox.Show("A button with the same Name/s already exists");
+                }
 
-                    };
-                    int newButtonId = _buttonService.AddButton(newButton);
+                catch (ParentDeletedWithChildConflictException)
+                {
+                    MessageBox.Show("The screen you are adding this button to has been deleted");
+
+                }
+
+                catch (Exception)
+                {
+                    MessageBox.Show("A problem occured while adding the button");
+
                 }
             }
         }
+
 
         private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -239,10 +312,6 @@ namespace _2__Ticketing_Screen_Designer.UI
             }
         }
 
-        private void ServiceList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
 
         private void ButtonActionList_SelectedIndexChanged(object sender, EventArgs e)
         {

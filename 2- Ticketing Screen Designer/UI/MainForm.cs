@@ -32,16 +32,6 @@ namespace _2__Ticketing_Screen_Designer.UI
         }
 
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             Application.Exit();
@@ -49,10 +39,6 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
-
-
-
             refreshList();
 
         }
@@ -99,18 +85,26 @@ namespace _2__Ticketing_Screen_Designer.UI
                 );
                 if (confirm == DialogResult.Yes)
                 {
-                    if (_screenService.DeleteScreen(screenIdToDelete))
+                    try
                     {
-                        MessageBox.Show($"Successfully initiated deletion for Screen : {screenName}");
+                        if (_screenService.DeleteScreen(screenIdToDelete))
+                        {
+                            MessageBox.Show($"Successfully initiated deletion for Screen : {screenName}");
 
 
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Screen is already deleted");
+                        }
+                        screenList.Items.Remove(selectedScreen);
+                        screenList.ClearSelected();
                     }
-                    else
+
+                    catch (Exception)
                     {
-                        MessageBox.Show($"Screen is already deleted");
+                        MessageBox.Show($"A problem Occured while deleting this screen");
                     }
-                    screenList.Items.Remove(selectedScreen);
-                    screenList.ClearSelected();
                 }
 
             }
@@ -126,19 +120,28 @@ namespace _2__Ticketing_Screen_Designer.UI
             {
                 int screenIdToEdit = selectedScreen.ScreenId;
                 string screenName = selectedScreen.ScreenName;
-                var screen = _screenService.GetScreenDetails(screenIdToEdit);
-                if (screen != null)
+                try
                 {
-                    _stateService.Set(screen);
-                    var editScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
-                    editScreen.Show();
-                    this.Hide();
+                    var screen = _screenService.GetScreenDetails(screenIdToEdit);
+                    if (screen != null)
+                    {
+                        _stateService.Set(screen);
+                        var editScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
+                        editScreen.Show();
+                        this.Hide();
+                    }
+
+                    else
+                    {
+                        MessageBox.Show("This screen has been deleted by someone");
+                        refreshList();
+                    }
                 }
 
-                else
+                catch (Exception)
                 {
-                    MessageBox.Show("This screen has been deleted by someone");
-                    refreshList();
+                    MessageBox.Show("A problem occured while Retrieving screen info");
+
                 }
 
             }
@@ -155,8 +158,6 @@ namespace _2__Ticketing_Screen_Designer.UI
             var addScreen = _serviceProvider.GetRequiredService<AddScreenForm>();
             addScreen.Show();
             this.Hide();
-
-
 
         }
     }

@@ -45,7 +45,6 @@
             this.BankIdTextBox.Name = "BankIdTextBox";
             this.BankIdTextBox.Size = new System.Drawing.Size(242, 30);
             this.BankIdTextBox.TabIndex = 0;
-            this.BankIdTextBox.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // BankIdLabel
             // 
@@ -97,8 +96,6 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "LoginForm";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.LoginForm_FormClosed);
-            this.Load += new System.EventHandler(this.LoginForm_Load);
-            this.Click += new System.EventHandler(this.LoginForm_Click);
             this.ResumeLayout(false);
             this.PerformLayout();
 

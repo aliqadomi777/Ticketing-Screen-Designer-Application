@@ -46,7 +46,6 @@
             this.TitleLabel.Size = new System.Drawing.Size(165, 31);
             this.TitleLabel.TabIndex = 0;
             this.TitleLabel.Text = "Main Form - ";
-            this.TitleLabel.Click += new System.EventHandler(this.label1_Click);
             // 
             // AddScreenButton
             // 
@@ -92,7 +91,6 @@
             this.screenList.Name = "screenList";
             this.screenList.Size = new System.Drawing.Size(894, 352);
             this.screenList.TabIndex = 4;
-            this.screenList.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // ScreenTitleLabel
             // 

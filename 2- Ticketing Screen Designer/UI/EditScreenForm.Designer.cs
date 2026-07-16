@@ -51,7 +51,6 @@
             this.ScreenNameLabel.Size = new System.Drawing.Size(64, 25);
             this.ScreenNameLabel.TabIndex = 0;
             this.ScreenNameLabel.Text = "Name";
-            this.ScreenNameLabel.Click += new System.EventHandler(this.label1_Click);
             // 
             // StatusLabel
             // 
@@ -81,7 +80,6 @@
             this.ActivateButton.TabStop = true;
             this.ActivateButton.Text = "Activate";
             this.ActivateButton.UseVisualStyleBackColor = true;
-            this.ActivateButton.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
             // 
             // DeactivateButton
             // 
@@ -93,7 +91,6 @@
             this.DeactivateButton.TabStop = true;
             this.DeactivateButton.Text = "Deactivate";
             this.DeactivateButton.UseVisualStyleBackColor = true;
-            this.DeactivateButton.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
             // 
             // ButtonsList
             // 
@@ -103,7 +100,6 @@
             this.ButtonsList.Name = "ButtonsList";
             this.ButtonsList.Size = new System.Drawing.Size(900, 379);
             this.ButtonsList.TabIndex = 5;
-            this.ButtonsList.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             // 
             // ButtonLabel
             // 
@@ -113,7 +109,6 @@
             this.ButtonLabel.Size = new System.Drawing.Size(78, 25);
             this.ButtonLabel.TabIndex = 6;
             this.ButtonLabel.Text = "Buttons";
-            this.ButtonLabel.Click += new System.EventHandler(this.label1_Click_1);
             // 
             // EditButton
             // 

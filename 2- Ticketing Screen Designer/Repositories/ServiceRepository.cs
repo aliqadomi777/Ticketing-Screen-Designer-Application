@@ -14,85 +14,68 @@ namespace Ticketing_Screen_Designer.Repositories
         public ServiceRepository(string connectionString) : base(connectionString) { }
         public ServiceType GetById(int serviceId)
         {
-            string query = @"SELECT ServiceID, ServicesName FROM Services WHERE ServiceID = @ServiceID;";
-            try
+            string query = @"
+                SELECT ServiceID, ServicesName 
+                FROM Services 
+                WHERE ServiceID = @ServiceID;";
+
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
             {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
+                cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = serviceId;
+                conn.Open();
+
+                using (var reader = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.Add("@ServiceID", SqlDbType.Int).Value = serviceId;
-                    conn.Open();
-
-                    using (var reader = cmd.ExecuteReader())
+                    if (reader.Read())
                     {
-                        if (reader.Read())
+                        return new ServiceType
                         {
-                            return new ServiceType
-                            {
-                                ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
-                                ServicesName = reader.GetString(reader.GetOrdinal("ServicesName")),
+                            ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
+                            ServicesName = reader.GetString(reader.GetOrdinal("ServicesName")),
 
-                            };
-                        }
+                        };
                     }
                 }
+            }
 
-                return null;
-            }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside ServiceRepository.GetById for ID: {serviceId} ", serviceId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ServiceRepository.GetById for ID: {serviceId} ", serviceId);
-                throw;
-            }
+            return null;
+
+
         }
         public IEnumerable<ServiceType> GetAll()
         {
-            string query = @"SELECT ServiceID, ServicesName FROM Services;";
+            string query = @"
+                SELECT ServiceID, ServicesName 
+                FROM Services;";
             List<ServiceType> services = new List<ServiceType>();
-            try
-            {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
-                {
-                    conn.Open();
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (reader.HasRows)
-                        {
-                            int serviceIdOrd = reader.GetOrdinal("ServiceID");
-                            int servicesNameOrd = reader.GetOrdinal("ServicesName");
-                            while (reader.Read())
-                            {
-                                services.Add(new ServiceType
-                                {
-                                    ServiceId = reader.GetInt32(serviceIdOrd),
-                                    ServicesName = reader.GetString(servicesNameOrd),
-                                });
-                            }
-                        }
 
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
+            {
+                conn.Open();
+                using (var reader = cmd.ExecuteReader())
+                {
+                    if (reader.HasRows)
+                    {
+                        int serviceIdOrd = reader.GetOrdinal("ServiceID");
+                        int servicesNameOrd = reader.GetOrdinal("ServicesName");
+                        while (reader.Read())
+                        {
+                            services.Add(new ServiceType
+                            {
+                                ServiceId = reader.GetInt32(serviceIdOrd),
+                                ServicesName = reader.GetString(servicesNameOrd),
+                            });
+                        }
                     }
 
                 }
 
-                return services;
-            }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside ServiceRepository.GetAll");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ServiceRepository.GetAll");
-                throw;
             }
 
+            return services;
         }
+
     }
 }

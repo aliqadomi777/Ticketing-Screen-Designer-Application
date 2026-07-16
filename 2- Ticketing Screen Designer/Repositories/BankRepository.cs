@@ -16,82 +16,71 @@ namespace Ticketing_Screen_Designer.Repositories
 
         public BankModel GetById(int bankId)
         {
-            string query = @"SELECT BankID, BankName FROM Banks WHERE BankID = @BankID;";
+            string query = @"
 
-            try
+                SELECT BankID, BankName
+                FROM Banks
+                WHERE BankID = @BankID;";
+
+
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
             {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
+                cmd.Parameters.Add("@BankID", SqlDbType.Int).Value = bankId;
+
+                conn.Open();
+
+                using (var reader = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.Add("@BankID", SqlDbType.Int).Value = bankId;
-                    conn.Open();
+                    if (!reader.Read())
+                        return null;
 
-                    using (var reader = cmd.ExecuteReader())
+                    return new BankModel
                     {
-
-                        if (reader.Read())
-                        {
-                            return new BankModel
-                            {
-                                BankId = reader.GetInt32(reader.GetOrdinal("BankID")),
-                                BankName = reader.GetString(reader.GetOrdinal("BankName"))
-                            };
-                        }
-
-
-                    }
+                        BankId = reader.GetInt32(reader.GetOrdinal("BankID")),
+                        BankName = reader.GetString(reader.GetOrdinal("BankName"))
+                    };
                 }
-                return null;
             }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside BankRepository.GetById for ID: {bankId} ", bankId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in BankRepository.GetById for ID: {bankId} ", bankId);
-                throw;
-            }
-
-
         }
+
+
+
         public int Add(BankModel bankModel)
         {
             string query = @"
-            INSERT INTO Banks (BankName) VALUES (@BankName);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+
+            INSERT INTO Banks (BankName)
+            VALUES (@BankName);
+
+            SELECT CAST(SCOPE_IDENTITY() AS int);";
+
 
             try
             {
                 using (var conn = new SqlConnection(ConnectionString))
                 using (var cmd = new SqlCommand(query, conn))
                 {
-
                     cmd.Parameters.Add("@BankName", SqlDbType.NVarChar, 100).Value = bankModel.BankName;
+
                     conn.Open();
+
                     if (cmd.ExecuteScalar() is int newId)
                     {
                         return newId;
                     }
 
-                    throw new InvalidOperationException("Database failed to return a valid identity ID.");
+                    throw new InvalidOperationException("Database failed to return the generated identity.");
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
-                Log.Error(ex, "Failed database operation inside BankRepository.Add for model: {@bankModel} ", bankModel);
-                if (ex.Number == 2627 || ex.Number == 2601)
-                {
-                    throw new DuplicateRecordException($"A bank named '{bankModel.BankName}' already exists. ", ex);
-                }
-                throw;
+                throw new DuplicateRecordException(
+                    $"A bank named '{bankModel.BankName}' already exists.",
+                    ex);
             }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in BankRepository.Add");
-                throw;
-            }
+
+
         }
     }
 

@@ -31,24 +31,25 @@ namespace _2__Ticketing_Screen_Designer.UI
         private void AddScreenForm_Load(object sender, EventArgs e)
         {
             NewScreenInactiveButton.Checked = true;
-
         }
 
         private void NewScreenSaveButton_Click(object sender, EventArgs e)
         {
+            string enteredScreenName = NewScreenNameTextBox.Text.Trim();
+
             try
             {
                 var bankSession = _stateService.Get<BankResponseDto>();
 
                 int newScreenId = _screenService.AddScreen(new CreateScreenRequestDto
                 {
-                    ScreenName = NewScreenNameTextBox.Text.Trim(),
+                    ScreenName = enteredScreenName,
                     IsActive = NewScreenActiveButton.Checked,
                     BankId = bankSession.BankId
                 });
                 if (newScreenId > 0)
                 {
-                    MessageBox.Show("Screen added successfully!");
+                    MessageBox.Show($"Screen with name {enteredScreenName} successfully!");
                     NewScreenNameTextBox.Text = string.Empty;
                     NewScreenActiveButton.Checked = false;
                     NewScreenInactiveButton.Checked = true;
@@ -67,12 +68,19 @@ namespace _2__Ticketing_Screen_Designer.UI
             }
             catch (DuplicateRecordException)
             {
-                MessageBox.Show($"A screen with the name {NewScreenNameTextBox.Text} Already exists");
+                MessageBox.Show($"A screen with the name \"{enteredScreenName}\" already exists.");
             }
+            //This version "this error never occurs since the adding deactivate active screen"
             catch (ExcessiveScreenActivationException)
             {
 
                 MessageBox.Show("Another screen is already active for the bank");
+            }
+
+            catch (Exception)
+            {
+                MessageBox.Show("A problem occured while adding a new screen to the bank");
+
             }
         }
 

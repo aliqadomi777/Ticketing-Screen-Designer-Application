@@ -30,14 +30,6 @@ namespace _2__Ticketing_Screen_Designer.UI
 
             RegisterButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
 
-
-
-
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -45,37 +37,38 @@ namespace _2__Ticketing_Screen_Designer.UI
             BankIdTextBox.Focus();
         }
 
-        private void LoginForm_Load(object sender, EventArgs e)
-        {
 
-        }
-
-        private void LoginForm_Click(object sender, EventArgs e)
-        {
-
-        }
 
         private void LoginButton_Click(object sender, EventArgs e)
         {
-            int bankId;
-            if (int.TryParse(BankIdTextBox.Text, out bankId))
+            try
             {
-                var bankDetails = _bankService.GetBankDetails(bankId);
-                if (bankDetails != null)
+                int bankId;
+                int.TryParse(BankIdTextBox.Text, out bankId);
+                if (bankId > 0)
                 {
-                    _stateService.Set(bankDetails);
-                    var mainForm = _serviceProvider.GetRequiredService<MainForm>();
-                    mainForm.Show();
-                    this.Hide();
+                    var bankDetails = _bankService.GetBankDetails(bankId);
+                    if (bankDetails != null)
+                    {
+                        _stateService.Set(bankDetails);
+                        var mainForm = _serviceProvider.GetRequiredService<MainForm>();
+                        mainForm.Show();
+                        this.Hide();
+                    }
+                    else
+                    {
+                        MessageBox.Show("Bank doesn't exist");
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Bank doesn't exist");
+                    MessageBox.Show("Please enter a valid number");
                 }
             }
-            else
+
+            catch
             {
-                MessageBox.Show("Please enter a valid number");
+                MessageBox.Show("A problem occured while logging into the bank");
             }
         }
 

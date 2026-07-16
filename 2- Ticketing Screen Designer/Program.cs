@@ -1,11 +1,11 @@
 ﻿using _2__Ticketing_Screen_Designer.UI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
-using Serilog.Formatting.Json;
+using Serilog.Templates;
 using System;
 using System.IO;
-using System.Text.Json;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Interfaces.Services;
@@ -26,19 +26,48 @@ namespace Ticketing_Screen_Designer
         {
 
             string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
             string logFilePath = Path.Combine(logDirectory, "errors.json");
 
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Error()
-                .WriteTo.File(new JsonFormatter(), logFilePath, rollingInterval: RollingInterval.Day)
+                .WriteTo.File(
+                    new ExpressionTemplate(
+                        template: "{ {@t: @t, @l: @l, @m: @m, @x: @x, ..@p} }\n"
+                    ),
+                    logFilePath,
+                    rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //change this later
-            string connectionString = "Server=localhost;Database=TicketingScreenDesignerDB;User Id=sa;Password=Sedc0@123;TrustServerCertificate=True;";
+
+
+            string configPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Database",
+                "dbconfig.json");
+
+            if (!File.Exists(configPath))
+            {
+                MessageBox.Show($"Configuration file not found:\n{configPath}");
+                return;
+            }
+
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile(configPath, optional: false)
+                .Build();
+
+            string connectionString = configuration.GetConnectionString("DefaultConnection");
+
+
             var services = new ServiceCollection();
             services.AddSingleton<IUiStateService, UiStateService>();
 

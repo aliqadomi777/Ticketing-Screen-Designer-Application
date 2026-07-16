@@ -158,7 +158,6 @@
             this.ServiceList.Name = "ServiceList";
             this.ServiceList.Size = new System.Drawing.Size(281, 33);
             this.ServiceList.TabIndex = 8;
-            this.ServiceList.SelectedIndexChanged += new System.EventHandler(this.ServiceList_SelectedIndexChanged);
             // 
             // ServiceLabel
             // 

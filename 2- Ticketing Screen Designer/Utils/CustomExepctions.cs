@@ -20,4 +20,10 @@ namespace Ticketing_Screen_Designer.Utils
         public ExcessiveScreenActivationException(string message, Exception innerException)
             : base(message, innerException) { }
     }
+
+    public class ParentDeletedWithChildConflictException : DataAccessException
+    {
+        public ParentDeletedWithChildConflictException(string message, Exception innerException)
+    : base(message, innerException) { }
+    }
 }

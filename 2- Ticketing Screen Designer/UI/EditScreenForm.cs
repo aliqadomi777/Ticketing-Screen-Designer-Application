@@ -38,34 +38,11 @@ namespace _2__Ticketing_Screen_Designer.UI
         }
 
 
-        private void label1_Click(object sender, EventArgs e)
-        {
 
-        }
-
-        private void radioButton1_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void listBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            // updated 2 active screens at the same time handle 
+
             var screenDetails = _stateService.Get<ScreenResponseDto>();
 
             bool isActivatedCurrent = ActivateButton.Checked;
@@ -88,10 +65,21 @@ namespace _2__Ticketing_Screen_Designer.UI
                         MessageBox.Show($"Updated correctly with the new name {updatedScreen.ScreenName}");
                     }
                 }
+                else
+                {
+                    MessageBox.Show($"The current info are up to date");
+
+                }
             }
             catch (ExcessiveScreenActivationException)
             {
                 MessageBox.Show("A screen is already active");
+            }
+
+            catch (DuplicateRecordException)
+            {
+                MessageBox.Show("A screen with the same name already exists");
+
             }
 
 
@@ -113,20 +101,28 @@ namespace _2__Ticketing_Screen_Designer.UI
         {
             if (ButtonsList.SelectedItem is BaseButtonResponseDto selectedButton)
             {
-                int buttonIdToEdit = selectedButton.ButtonId;
-                var button = _buttonService.GetButtonDetails(buttonIdToEdit, selectedButton.ButtonType);
-                if (button != null)
+                try
                 {
-                    _stateService.Set(button);
-                    var editButton = _serviceProvider.GetRequiredService<AddEditButton>();
-                    editButton.Show();
-                    this.Hide();
-                }
+                    int buttonIdToEdit = selectedButton.ButtonId;
+                    var button = _buttonService.GetButtonDetails(buttonIdToEdit, selectedButton.ButtonType);
+                    if (button != null)
+                    {
+                        _stateService.Set(button);
+                        var editButton = _serviceProvider.GetRequiredService<AddEditButton>();
+                        editButton.Show();
+                        this.Hide();
+                    }
 
-                else
+                    else
+                    {
+                        MessageBox.Show("This button has been deleted by someone");
+                        refreshList();
+                    }
+                }
+                catch (Exception)
                 {
-                    MessageBox.Show("This button has been deleted by someone");
-                    refreshList();
+                    MessageBox.Show($"A problem Occured while retrieving info for this button");
+
                 }
 
             }
@@ -151,31 +147,37 @@ namespace _2__Ticketing_Screen_Designer.UI
                 );
                 if (confirm == DialogResult.Yes)
                 {
-                    if (_buttonService.DeleteButton(buttonIdToDelete))
+                    try
                     {
-                        MessageBox.Show($"Successfully initiated deletion for Screen : {selectedButton.ButtonNameEN}");
+                        if (_buttonService.DeleteButton(buttonIdToDelete))
+                        {
+                            MessageBox.Show($"Successfully initiated deletion for Screen : {selectedButton.ButtonNameEN}");
 
 
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Button is already deleted");
+                        }
+                        ButtonsList.Items.Remove(selectedButton);
+                        ButtonsList.ClearSelected();
                     }
-                    else
+                    catch (Exception)
                     {
-                        MessageBox.Show($"Button is already deleted");
+                        MessageBox.Show($"A problem Occured while deleting this button");
                     }
-                    ButtonsList.Items.Remove(selectedButton);
-                    ButtonsList.ClearSelected();
                 }
 
             }
             else
             {
-                MessageBox.Show("Please select a screen to delete.");
+                MessageBox.Show("Please select a button to delete.");
             }
         }
 
         private void EditScreenForm_Load(object sender, EventArgs e)
         {
             refreshList();
-
 
         }
 
@@ -185,17 +187,26 @@ namespace _2__Ticketing_Screen_Designer.UI
             ButtonsList.Items.Clear();
             var screenDetails = _stateService.Get<ScreenResponseDto>();
 
-            ScreenNameTextBox.Text = screenDetails.ScreenName;
-            ActivateButton.Checked = screenDetails.IsActive;
-            DeactivateButton.Checked = !screenDetails.IsActive;
 
             if (screenDetails != null)
             {
-                var buttons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
-                ButtonsList.DisplayMember = "DisplayText";
-                foreach (var button in buttons)
+                ScreenNameTextBox.Text = screenDetails.ScreenName;
+                ActivateButton.Checked = screenDetails.IsActive;
+                DeactivateButton.Checked = !screenDetails.IsActive;
+                try
                 {
-                    ButtonsList.Items.Add(button);
+                    var buttons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                    ButtonsList.DisplayMember = "DisplayText";
+                    foreach (var button in buttons)
+                    {
+                        ButtonsList.Items.Add(button);
+                    }
+                }
+
+                catch (Exception)
+                {
+                    MessageBox.Show($"A problem Occured while retrieving buttons for this screen");
+
                 }
             }
         }

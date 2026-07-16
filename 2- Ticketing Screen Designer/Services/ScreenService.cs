@@ -1,7 +1,9 @@
 ﻿using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Interfaces.Services;
@@ -47,10 +49,28 @@ namespace Ticketing_Screen_Designer.Services
                     ModifiedAt = screen.ModifiedAt
                 };
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex,
+                          "SQL error {SqlErrorNumber} while retrieving screen with ID: '{screenId}'.",
+                          ex.Number,
+                          screenId);
+
+                throw new DataAccessException(
+                    "A database error occurred while retrieving screen info",
+                    ex);
+            }
+
+
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed executing query for Screen with ID: {screenId}", screenId);
-                throw new DataAccessException($"Could not retrieve profile records for Screen ID {screenId}.", ex);
+                Log.Error(ex,
+                    "Failed business operation 'GetScreenDetails' for screen {screenId}.",
+                    screenId);
+
+                throw new DataAccessException(
+                    $"Could not retrieve screen {screenId}.",
+                    ex);
             }
 
         }
@@ -72,10 +92,28 @@ namespace Ticketing_Screen_Designer.Services
                     ModifiedAt = screen.ModifiedAt
                 }).ToList();
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex,
+                          "SQL error {SqlErrorNumber} while retrieving screens for bank with ID: '{bankId}'.",
+                          ex.Number,
+                          bankId);
+
+                throw new DataAccessException(
+                    "A database error occurred while retrieving all screens for the bank",
+                    ex);
+            }
+
+
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed executing query retrieving all screen for bank with ID: {bankId}", bankId);
-                throw new DataAccessException($"Could not retrieve profile screens for bank ID {bankId}.", ex);
+                Log.Error(ex,
+                    "Failed business operation 'GetAllScreensDetails' for bank {bankId}.",
+                    bankId);
+
+                throw new DataAccessException(
+                    $"Could not retrieve screens with bank ID: {bankId}.",
+                    ex);
             }
         }
         public int AddScreen(CreateScreenRequestDto request)
@@ -94,10 +132,36 @@ namespace Ticketing_Screen_Designer.Services
                 return generatedId;
             }
 
-            catch (Exception ex) when (!(ex is DuplicateRecordException))
+            catch (DuplicateRecordException)
             {
-                Log.Error(ex, "Unexpected failure during Screen creation process.");
-                throw new DataAccessException("An unexpected structural error occurred. Please try again later.", ex);
+                throw;
+            }
+
+            catch (ParentDeletedWithChildConflictException)
+            {
+                throw;
+            }
+
+            catch (SqlException ex)
+            {
+                Log.Error(ex,
+                          "SQL error {SqlErrorNumber} while creating Screen '{ScreenName}'.",
+                          ex.Number,
+                          request.ScreenName);
+
+                throw new DataAccessException(
+                    "A database error occurred while creating the screen.",
+                    ex);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex,
+                    "Unexpected error while creating screen '{ScreenName}'.",
+                    request.ScreenName);
+
+                throw new DataAccessException(
+                    "An unexpected error occurred while creating the Screen.",
+                    ex);
             }
         }
         public bool UpdateScreen(BaseScreenRequestDto request)
@@ -114,14 +178,34 @@ namespace Ticketing_Screen_Designer.Services
                 bool isUpdated = _updateRepository.Update(screenModel);
                 return isUpdated;
             }
+            catch (DuplicateRecordException)
+            {
+                throw;
+            }
             catch (ExcessiveScreenActivationException)
             {
                 throw;
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex,
+                          "SQL error {SqlErrorNumber} while updating Screen '{ScreenName}'.",
+                          ex.Number,
+                          request.ScreenName);
+
+                throw new DataAccessException(
+                    "A database error occurred while updating the screen.",
+                    ex);
+            }
             catch (Exception ex)
             {
-                Log.Error(ex, "Unexpected failure during Screen Updating process.");
-                throw new DataAccessException("An unexpected structural error occurred. Please try again later.", ex);
+                Log.Error(ex,
+                    "Unexpected error while updating screen '{ScreenName}'.",
+                    request.ScreenName);
+
+                throw new DataAccessException(
+                    "An unexpected error occurred while updating the ScreenName.",
+                    ex);
             }
 
         }
@@ -132,10 +216,26 @@ namespace Ticketing_Screen_Designer.Services
                 bool isDeleted = _deleteRepository.Delete(screenId);
                 return isDeleted;
             }
+            catch (SqlException ex)
+            {
+                Log.Error(ex,
+                          "SQL error {SqlErrorNumber} while deleting Screen with ID: '{screenId}'.",
+                          ex.Number,
+                          screenId);
+
+                throw new DataAccessException(
+                    "A database error occurred while deleting the screen.",
+                    ex);
+            }
             catch (Exception ex)
             {
-                Log.Error(ex, "Unexpected failure during Screen Deletion process.");
-                throw new DataAccessException("An unexpected structural error occurred. Please try again later.", ex);
+                Log.Error(ex,
+                    "Unexpected error while deleting screen with ID: '{screenId}'.",
+                    screenId);
+
+                throw new DataAccessException(
+                    "An unexpected error occurred while deleting the Screen.",
+                    ex);
             }
 
         }

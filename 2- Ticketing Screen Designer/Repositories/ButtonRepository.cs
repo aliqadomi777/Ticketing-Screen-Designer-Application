@@ -1,5 +1,4 @@
-﻿using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -35,70 +34,61 @@ namespace Ticketing_Screen_Designer.Repositories
                 FROM Buttons B INNER JOIN Messages M ON B.ButtonID = M.ButtonID
                 WHERE B.ButtonID = @ButtonID;";
             }
-            try
+
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
             {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
+                cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
+                conn.Open();
+
+                using (var reader = cmd.ExecuteReader())
                 {
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
-                    conn.Open();
-
-                    using (var reader = cmd.ExecuteReader())
+                    if (reader.Read())
                     {
-                        if (reader.Read())
+                        if (buttonType == 1)
                         {
-                            if (buttonType == 2)
+                            return new TicketModel
                             {
-                                return new MessageModel
-                                {
-                                    ButtonId = reader.GetInt32(reader.GetOrdinal("ButtonID")),
-                                    ButtonNameAR = reader.GetString(reader.GetOrdinal("ButtonNameAR")),
-                                    ButtonNameEN = reader.GetString(reader.GetOrdinal("ButtonNameEN")),
-                                    ButtonType = reader.GetInt32(reader.GetOrdinal("ButtonType")),
-                                    ModifiedAt = reader.GetDateTimeOffset(reader.GetOrdinal("ModifiedAt")),
-                                    ScreenId = reader.GetInt32(reader.GetOrdinal("ScreenID")),
-                                    MessageId = reader.GetInt32(reader.GetOrdinal("MessageID")),
-                                    MessageEN = reader.GetString(reader.GetOrdinal("MessageEN")),
-                                    MessageAR = reader.GetString(reader.GetOrdinal("MessageAR")),
-                                    TypeName = "Show Message",
+                                ButtonId = reader.GetInt32(reader.GetOrdinal("ButtonID")),
+                                ButtonNameAR = reader.GetString(reader.GetOrdinal("ButtonNameAR")),
+                                ButtonNameEN = reader.GetString(reader.GetOrdinal("ButtonNameEN")),
+                                ButtonType = reader.GetInt32(reader.GetOrdinal("ButtonType")),
+                                ModifiedAt = reader.GetDateTimeOffset(reader.GetOrdinal("ModifiedAt")),
+                                ScreenId = reader.GetInt32(reader.GetOrdinal("ScreenID")),
+                                ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
+                                ServiceName = reader.GetString(reader.GetOrdinal("ServicesName")),
+                                TicketId = reader.GetInt32(reader.GetOrdinal("TicketID")),
+                                TypeName = "Issue Ticket",
 
-                                };
-                            }
-                            else if (buttonType == 1)
-                            {
-                                return new TicketModel
-                                {
-                                    ButtonId = reader.GetInt32(reader.GetOrdinal("ButtonID")),
-                                    ButtonNameAR = reader.GetString(reader.GetOrdinal("ButtonNameAR")),
-                                    ButtonNameEN = reader.GetString(reader.GetOrdinal("ButtonNameEN")),
-                                    ButtonType = reader.GetInt32(reader.GetOrdinal("ButtonType")),
-                                    ModifiedAt = reader.GetDateTimeOffset(reader.GetOrdinal("ModifiedAt")),
-                                    ScreenId = reader.GetInt32(reader.GetOrdinal("ScreenID")),
-                                    ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
-                                    ServiceName = reader.GetString(reader.GetOrdinal("ServicesName")),
-                                    TicketId = reader.GetInt32(reader.GetOrdinal("TicketID")),
-                                    TypeName = "Issue Ticket",
-
-                                };
-                            }
+                            };
 
                         }
+                        else if (buttonType == 2)
+                        {
+                            return new MessageModel
+                            {
+                                ButtonId = reader.GetInt32(reader.GetOrdinal("ButtonID")),
+                                ButtonNameAR = reader.GetString(reader.GetOrdinal("ButtonNameAR")),
+                                ButtonNameEN = reader.GetString(reader.GetOrdinal("ButtonNameEN")),
+                                ButtonType = reader.GetInt32(reader.GetOrdinal("ButtonType")),
+                                ModifiedAt = reader.GetDateTimeOffset(reader.GetOrdinal("ModifiedAt")),
+                                ScreenId = reader.GetInt32(reader.GetOrdinal("ScreenID")),
+                                MessageId = reader.GetInt32(reader.GetOrdinal("MessageID")),
+                                MessageEN = reader.GetString(reader.GetOrdinal("MessageEN")),
+                                MessageAR = reader.GetString(reader.GetOrdinal("MessageAR")),
+                                TypeName = "Show Message",
+
+                            };
+                        }
+
                     }
                 }
 
 
-                return null;
+
+
             }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside ButtonRepository.GetById for ID: {buttonId} ", buttonId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.GetById for ID: {buttonId} ", buttonId);
-                throw;
-            }
+            return null;
         }
 
 
@@ -111,67 +101,55 @@ namespace Ticketing_Screen_Designer.Repositories
 
             List<ButtonModel> buttons = new List<ButtonModel>();
 
-            try
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
             {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
+
+                cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = screenId;
+                conn.Open();
+                using (var reader = cmd.ExecuteReader())
                 {
+                    int buttonIdOrd = reader.GetOrdinal("ButtonID");
 
-                    cmd.Parameters.Add("@ScreenID", SqlDbType.Int).Value = screenId;
-                    conn.Open();
-                    using (var reader = cmd.ExecuteReader())
+                    if (reader.HasRows)
                     {
-                        int buttonIdOrd = reader.GetOrdinal("ButtonID");
-
-                        if (reader.HasRows)
+                        int buttonNameENOrd = reader.GetOrdinal("ButtonNameEN");
+                        int buttonNameAROrd = reader.GetOrdinal("ButtonNameAR");
+                        int buttonTypeOrd = reader.GetOrdinal("ButtonType");
+                        int screenIdOrd = reader.GetOrdinal("ScreenID");
+                        int modifiedAtOrd = reader.GetOrdinal("ModifiedAt");
+                        int typeNameOrd = reader.GetOrdinal("TypeName");
+                        while (reader.Read())
                         {
-                            int buttonNameENOrd = reader.GetOrdinal("ButtonNameEN");
-                            int buttonNameAROrd = reader.GetOrdinal("ButtonNameAR");
-                            int buttonTypeOrd = reader.GetOrdinal("ButtonType");
-                            int screenIdOrd = reader.GetOrdinal("ScreenID");
-                            int modifiedAtOrd = reader.GetOrdinal("ModifiedAt");
-                            int typeNameOrd = reader.GetOrdinal("TypeName");
-                            while (reader.Read())
+                            buttons.Add(new ButtonModel
                             {
-                                buttons.Add(new ButtonModel
-                                {
-                                    ButtonId = reader.GetInt32(buttonIdOrd),
-                                    ButtonNameEN = reader.GetString(buttonNameENOrd),
-                                    ButtonNameAR = reader.GetString(buttonNameAROrd),
-                                    ButtonType = reader.GetInt32(buttonTypeOrd),
-                                    ScreenId = reader.GetInt32(screenIdOrd),
-                                    ModifiedAt = reader.GetDateTimeOffset(modifiedAtOrd),
-                                    TypeName = reader.GetString(typeNameOrd),
-                                });
-                            }
+                                ButtonId = reader.GetInt32(buttonIdOrd),
+                                ButtonNameEN = reader.GetString(buttonNameENOrd),
+                                ButtonNameAR = reader.GetString(buttonNameAROrd),
+                                ButtonType = reader.GetInt32(buttonTypeOrd),
+                                ScreenId = reader.GetInt32(screenIdOrd),
+                                ModifiedAt = reader.GetDateTimeOffset(modifiedAtOrd),
+                                TypeName = reader.GetString(typeNameOrd),
+                            });
                         }
-
-
                     }
+
 
                 }
 
-                return buttons;
+
+
             }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside ButtonRepository.GetAll for ID: {screenId} ", screenId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.GetAll for ID: {screenId} ", screenId);
-                throw;
-            }
+            return buttons;
 
         }
 
         public int Add(ButtonModel buttonModel)
         {
             string query = @"
-            INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
-            VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
-            SELECT CAST(SCOPE_IDENTITY() as int);";
+                INSERT INTO Buttons (ButtonNameEN, ButtonNameAR, ButtonType, ScreenID) 
+                VALUES (@ButtonNameEN, @ButtonNameAR, @ButtonType, @ScreenID);
+                SELECT CAST(SCOPE_IDENTITY() as int);";
             try
             {
                 using (var conn = new SqlConnection(ConnectionString))
@@ -190,19 +168,18 @@ namespace Ticketing_Screen_Designer.Repositories
 
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
-                Log.Error(ex, "Failed database operation inside ButtonRepository.Add for model: {@buttonModel} ", buttonModel);
-                if (ex.Number == 2627 || ex.Number == 2601)
-                {
-                    throw new DuplicateRecordException($"A button with the same naming already exist on screen for ID {buttonModel.ScreenId}", ex);
-                }
-                throw;
+                throw new DuplicateRecordException(
+                    $"A Button named with the same Arabic/English name already exists.",
+                    ex);
             }
-            catch (Exception ex)
+
+            catch (SqlException ex) when (ex.Number == 547)
             {
-                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Add");
-                throw;
+                throw new ParentDeletedWithChildConflictException(
+                    $"The Screen your adding Button to has been deleted",
+                    ex);
             }
         }
 
@@ -227,43 +204,32 @@ namespace Ticketing_Screen_Designer.Repositories
                     return rowsAffected > 0;
                 }
             }
-            catch (SqlException ex)
+            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
             {
-                Log.Error(ex, "Failed database operation inside ButtonRepository.Update for model: {@buttonModel} ", buttonModel);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Update");
-                throw;
+                throw new DuplicateRecordException(
+                    $"A Button named with the same Arabic/English name already exists.",
+                    ex);
             }
 
         }
         public bool Delete(int buttonId)
         {
-            string query = @"DELETE FROM Buttons WHERE ButtonID = @ButtonID;";
+            string query = @"
+                DELETE 
+                FROM Buttons 
+                WHERE ButtonID = @ButtonID;";
 
-            try
+
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(query, conn))
             {
-                using (var conn = new SqlConnection(ConnectionString))
-                using (var cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
-                    conn.Open();
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    return rowsAffected > 0;
-                }
+                cmd.Parameters.Add("@ButtonID", SqlDbType.Int).Value = buttonId;
+                conn.Open();
+                int rowsAffected = cmd.ExecuteNonQuery();
+                return rowsAffected > 0;
             }
-            catch (SqlException ex)
-            {
-                Log.Error(ex, "Failed database operation inside ButtonRepository.Delete model by ID: {buttonId} ", buttonId);
-                throw;
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "Critical, unexpected system error in ButtonRepository.Delete");
-                throw;
-            }
+
+
 
         }
 
