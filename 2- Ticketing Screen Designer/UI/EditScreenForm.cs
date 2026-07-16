@@ -62,7 +62,7 @@ namespace _2__Ticketing_Screen_Designer.UI
                     {
                         var updatedScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
                         _stateService.Set(updatedScreen);
-                        MessageBox.Show($"Updated correctly with the new name {updatedScreen.ScreenName}");
+                        MessageBox.Show($"Updated correctly");
                     }
                 }
                 else
