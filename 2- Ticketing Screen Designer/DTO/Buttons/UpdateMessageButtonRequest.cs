@@ -9,11 +9,15 @@ namespace Ticketing_Screen_Designer.DTO.Buttons
         [Required(ErrorMessage = "message ID key is required.")]
         public int messageId { get; set; }
 
-        [Required(ErrorMessage = "AR Button name is required.")]
-        [StringLength(500, ErrorMessage = "Button name can't exeed 500 characters.")]
+        [Required(ErrorMessage = "MessageEN is required.")]
+        [MinLength(1, ErrorMessage = "MessageEN  must be at least 1 characters long.")]
+        [MaxLength(500, ErrorMessage = "MessageEN  can't exceed 500 characters.")]
+
         public string MessageEN { get; set; }
-        [Required(ErrorMessage = "EN Button name is required.")]
-        [StringLength(500, ErrorMessage = "Button name can't exeed 500 characters.")]
+        [Required(ErrorMessage = "MessageAR is required.")]
+        [MinLength(1, ErrorMessage = "MessageAR  must be at least 1 characters long.")]
+        [MaxLength(500, ErrorMessage = "MessageAR  can't exceed 500 characters.")]
+
         public string MessageAR { get; set; }
 
         public int TicketId { get; set; }
