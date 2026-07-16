@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Buttons;
@@ -71,6 +72,10 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                 }
             }
+            catch (ValidationException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
             catch (ExcessiveScreenActivationException)
             {
                 MessageBox.Show("A screen is already active");
@@ -80,6 +85,10 @@ namespace _2__Ticketing_Screen_Designer.UI
             {
                 MessageBox.Show("A screen with the same name already exists");
 
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("A problem occured while updating screen");
             }
 
 

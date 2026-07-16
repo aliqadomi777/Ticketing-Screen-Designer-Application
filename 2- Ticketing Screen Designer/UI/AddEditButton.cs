@@ -142,106 +142,87 @@ namespace _2__Ticketing_Screen_Designer.UI
             var ticketButton = button as TicketButtonResponseDto;
             var messageButton = button as MessageButtonResponseDto;
 
+            bool coreChanged = false;
+            bool ticketChanged = false;
+            bool messageChanged = false;
             if (ticketButton != null || messageButton != null)
             {
                 //Checks if any changes occured on the existing button info 
                 string originalAction = button.TypeName;
 
-                bool coreChanged = ButtonNameArTextBox.Text != button.ButtonNameAR ||
-                                   ButtonNameEnTextBox.Text != button.ButtonNameEN ||
-                                   originalAction != selectedAction;
+                coreChanged = ButtonNameArTextBox.Text != button.ButtonNameAR ||
+                                  ButtonNameEnTextBox.Text != button.ButtonNameEN ||
+                                  originalAction != selectedAction;
 
 
 
-                bool ticketChanged = selectedAction == "Issue Ticket" &&
-                                     (selectedServiceType?.ServiceId != (ticketButton?.ServiceId));
+                ticketChanged = selectedAction == "Issue Ticket" &&
+                                    (selectedServiceType?.ServiceId != (ticketButton?.ServiceId));
 
-                bool messageChanged = selectedAction == "Show Message" &&
-                                      (ArMessageTextBox.Text != (messageButton?.MessageAR ?? string.Empty) ||
-                                       EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
-
-
+                messageChanged = selectedAction == "Show Message" &&
+                                     (ArMessageTextBox.Text != (messageButton?.MessageAR ?? string.Empty) ||
+                                      EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
+            }
+            try
+            {
                 //Editing A button
                 if (ticketChanged || messageChanged || coreChanged)
                 {
                     //Detecting button action type change is handled by Backend (Button Repository)
-                    try
-                    {
 
-                        bool isUpdated = false;
-                        if (selectedAction == "Issue Ticket")
+
+                    bool isUpdated = false;
+                    if (selectedAction == "Issue Ticket")
+                    {
+                        var updatedTicketButton = new UpdateTicketButtonRequest
                         {
-                            var updatedTicketButton = new UpdateTicketButtonRequest
-                            {
-                                ButtonNameAR = ButtonNameArTextBox.Text,
-                                ButtonNameEN = ButtonNameArTextBox.Text,
-                                ButtonId = button.ButtonId,
-                                ButtonType = selectedButtonType.TypeId,
-                                ServiceId = selectedServiceType.ServiceId,
-                                TicketId = ticketButton?.TicketId ?? 0,
-                            };
+                            ButtonNameAR = ButtonNameArTextBox.Text,
+                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonId = button.ButtonId,
+                            ButtonType = selectedButtonType.TypeId,
+                            ServiceId = selectedServiceType.ServiceId,
+                            TicketId = ticketButton?.TicketId ?? 0,
+                        };
 
-                            isUpdated = _buttonService.UpdateButton(updatedTicketButton);
-                        }
+                        isUpdated = _buttonService.UpdateButton(updatedTicketButton);
+                    }
 
 
 
-                        else if (selectedAction == "Show Message")
+                    else if (selectedAction == "Show Message")
+                    {
+
+                        var updatedMessageButton = new UpdateMessageButtonRequest
                         {
-
-                            var updatedMessageButton = new UpdateMessageButtonRequest
-                            {
-                                ButtonNameAR = ButtonNameArTextBox.Text,
-                                ButtonNameEN = ButtonNameArTextBox.Text,
-                                ButtonId = button.ButtonId,
-                                ButtonType = selectedButtonType.TypeId,
-                                messageId = messageButton?.MessageId ?? 0,
-                                MessageAR = ArMessageTextBox.Text,
-                                MessageEN = EnMessageTextBox.Text,
-                            };
-                            isUpdated = _buttonService.UpdateButton(updatedMessageButton);
+                            ButtonNameAR = ButtonNameArTextBox.Text,
+                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonId = button.ButtonId,
+                            ButtonType = selectedButtonType.TypeId,
+                            messageId = messageButton?.MessageId ?? 0,
+                            MessageAR = ArMessageTextBox.Text,
+                            MessageEN = EnMessageTextBox.Text,
+                        };
+                        isUpdated = _buttonService.UpdateButton(updatedMessageButton);
 
 
 
-                        }
-                        if (!isUpdated)
-                        {
-                            MessageBox.Show("This Button has been deleted by someone else");
-                        }
-                        else if (isUpdated)
-                        {
-                            MessageBox.Show("Button Edited correctly");
-                        }
                     }
-                    catch (ValidationException ex)
+                    if (!isUpdated)
                     {
-                        MessageBox.Show(ex.Message);
+                        MessageBox.Show("This Button has been deleted by someone else");
                     }
-                    catch (DuplicateRecordException)
+                    else if (isUpdated)
                     {
-                        MessageBox.Show("A button with the same Name/s already exists");
+                        MessageBox.Show("Button Edited correctly");
                     }
 
-                    catch (ParentDeletedWithChildConflictException)
-                    {
-                        MessageBox.Show("The screen holding this button has been deleted");
 
-                    }
-
-                    catch (Exception)
-                    {
-                        MessageBox.Show("A problem occured while editing the button");
-
-                    }
 
                 }
-            }
-
-            //Adding A button
-            else
-            {
-                try
+                //Adding A button
+                else
                 {
+
                     int newButtonId = 0;
                     if (selectedAction == "Issue Ticket")
                     {
@@ -278,29 +259,37 @@ namespace _2__Ticketing_Screen_Designer.UI
                         MessageBox.Show("New Button has been created correctly");
 
                     }
-                }
-                catch (ValidationException ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
-                catch (DuplicateRecordException)
-                {
-                    MessageBox.Show("A button with the same Name/s already exists");
-                }
 
-                catch (ParentDeletedWithChildConflictException)
-                {
-                    MessageBox.Show("The screen you are adding this button to has been deleted");
 
                 }
 
-                catch (Exception)
-                {
-                    MessageBox.Show("A problem occured while adding the button");
-
-                }
             }
+            catch (ValidationException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            catch (DuplicateRecordException)
+            {
+                MessageBox.Show("A button with the same Name/s already exists");
+            }
+
+            catch (ParentDeletedWithChildConflictException)
+            {
+                MessageBox.Show("The screen holding this button has been deleted");
+
+            }
+
+            catch (Exception)
+            {
+                MessageBox.Show("A problem occured while editing the button");
+
+            }
+
+
         }
+
+
+
 
 
         private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
