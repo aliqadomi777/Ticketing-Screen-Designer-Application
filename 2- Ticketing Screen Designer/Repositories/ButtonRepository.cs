@@ -34,6 +34,10 @@ namespace Ticketing_Screen_Designer.Repositories
                 FROM Buttons B INNER JOIN Messages M ON B.ButtonID = M.ButtonID
                 WHERE B.ButtonID = @ButtonID;";
             }
+            else
+            {
+                throw new NotSupportedException();
+            }
 
             using (var conn = new SqlConnection(ConnectionString))
             using (var cmd = new SqlCommand(query, conn))

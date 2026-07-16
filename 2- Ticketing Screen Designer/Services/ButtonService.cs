@@ -203,33 +203,41 @@ namespace Ticketing_Screen_Designer.Services
                         ButtonNameEN = button.ButtonNameEN,
                         ScreenId = button.ScreenId
                     });
+                    int resultId;
                     if (request is CreateTicketButtonRequestDto newTicketButton)
                     {
                         ValidationExtensions.ValidateModel(newTicketButton);
 
-                        int newTicketId = _addTicketRepository.Add(new TicketModel
+                        resultId = _addTicketRepository.Add(new TicketModel
                         {
                             ButtonId = newButtonId,
                             ServiceId = newTicketButton.ServiceId
                         });
-                        scope.Complete();
 
-                        return newTicketId;
                     }
                     else if (request is CreateMessageButtonRequestDto newMessageButton)
                     {
                         ValidationExtensions.ValidateModel(newMessageButton);
 
-                        int newMessageId = _addMessageRepository.Add(new MessageModel
+                        resultId = _addMessageRepository.Add(new MessageModel
                         {
                             ButtonId = newButtonId,
                             MessageEN = newMessageButton.MessageEN,
                             MessageAR = newMessageButton.MessageAR,
                         });
-                        scope.Complete();
-                        return newMessageId;
+
                     }
-                    throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                    else
+                    {
+                        throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                    }
+                    scope.Complete();
+
+                    return resultId;
+                }
+                catch (NotSupportedException)
+                {
+                    throw;
                 }
 
                 catch (DuplicateRecordException)
@@ -285,9 +293,10 @@ namespace Ticketing_Screen_Designer.Services
             {
                 try
                 {
+                    bool isOperationSuccessful = false;
                     var currentButton = _fetchButtonRepository.GetById(request.ButtonId, request.ButtonType);
 
-                    //Either button deleted or its child type is 
+                    //Either button deleted or it's child type is 
                     if (currentButton == null)
                     {
                         var buttonModel = new ButtonModel
@@ -299,6 +308,10 @@ namespace Ticketing_Screen_Designer.Services
                         };
                         // if false : does not exist 
                         bool isButtonUpdated = _updateButtonRepository.Update(buttonModel);
+                        if (!isButtonUpdated)
+                        {
+                            return false;
+                        }
                         if (request.ButtonType == 1 && isButtonUpdated)
                         {
                             var ticket = (UpdateTicketButtonRequest)request;
@@ -315,11 +328,9 @@ namespace Ticketing_Screen_Designer.Services
                             bool isDeleted = _deleteMessageRepository.Delete(request.ButtonId);
                             if (isDeleted)
                             {
+                                int resultId = _addTicketRepository.Add(ticketModel);
+                                isOperationSuccessful = (resultId > 0);
 
-                                int generatedId = _addTicketRepository.Add(ticketModel);
-                                scope.Complete();
-
-                                return generatedId > 0;
                             }
                         }
                         else if (request.ButtonType == 2 && isButtonUpdated)
@@ -340,21 +351,17 @@ namespace Ticketing_Screen_Designer.Services
                             bool isDeleted = _deleteTicketRepository.Delete(request.ButtonId);
                             if (isDeleted)
                             {
-
-                                int generatedId = _addMessageRepository.Add(messageModel);
-                                scope.Complete();
-
-                                return generatedId > 0;
+                                int resultId = _addMessageRepository.Add(messageModel);
+                                isOperationSuccessful = (resultId > 0);
                             }
                         }
 
-                        if (!isButtonUpdated)
+                        else
                         {
-                            return false;
+                            throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
                         }
 
 
-                        throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
                     }
 
                     //Editing the same button retaining the same type
@@ -372,8 +379,8 @@ namespace Ticketing_Screen_Designer.Services
                         if (request is UpdateTicketButtonRequest updatedTicket)
                         {
                             bool isTicketUpdated = _updateTicketRepository.Update(updatedTicket.ServiceId, updatedTicket.TicketId);
-                            scope.Complete();
-                            return isTicketUpdated && isButtonUpdated;
+                            isOperationSuccessful = isButtonUpdated || isTicketUpdated;
+
                         }
                         else if (request is UpdateMessageButtonRequest updatedMessage)
                         {
@@ -383,12 +390,26 @@ namespace Ticketing_Screen_Designer.Services
                                 MessageAR = updatedMessage.MessageAR,
                                 MessageEN = updatedMessage.MessageEN,
                             });
-                            scope.Complete();
-                            return isMessageUpdated && isButtonUpdated;
+                            isOperationSuccessful = isButtonUpdated || isMessageUpdated;
+
                         }
-                        throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                        else
+                        {
+                            throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                        }
+
+
+                    }
+                    if (isOperationSuccessful)
+                    {
+                        scope.Complete();
+                        return true;
                     }
                     return false;
+                }
+                catch (NotSupportedException)
+                {
+                    throw;
                 }
                 catch (DuplicateRecordException)
                 {
