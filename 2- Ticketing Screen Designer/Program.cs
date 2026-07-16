@@ -1,6 +1,5 @@
 ﻿using _2__Ticketing_Screen_Designer.UI;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Templates;

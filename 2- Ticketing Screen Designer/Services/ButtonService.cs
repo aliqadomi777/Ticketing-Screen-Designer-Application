@@ -178,7 +178,13 @@ namespace Ticketing_Screen_Designer.Services
 
 
         }
-        // adding button is wrapped by transaction to ensure both operations on button table and ticket or message table are commited both rolled back
+        /* 
+          adding button is wrapped by transaction to ensure both operations on 
+          button table and ticket or message table are commited both or rolled back 
+          First base button is added to button table then child row into tickets or messages
+          
+         */
+
         public int AddButton(BaseButtonDto request)
         {
 
@@ -281,8 +287,18 @@ namespace Ticketing_Screen_Designer.Services
 
         }
 
-        // updating button is wrapped by transaction to ensure both operations on button table and ticket or message table are commited both rolled back
-
+        /* 
+            updating button is wrapped by transaction to ensure both operations on button 
+            table and ticket or message table are commited on both or rolled back
+            
+            cases : 
+            - updating a button that was deleted : return when fetched null -> try to be updated -> does not exist -> !isButtonUpdated 
+            - updating a button but changing type : returns when fetched null (in Ui Info is passed as the new info to be updated) :
+              queries are inner joins : new buttontype  != original buttontype -> always isButtonUpdated = true -> the deletion must take place
+            -> true if issue happened it will be false and it rollback automatically -> scope completes return true 
+            - updating a button while retaining the same button type : return when fetched button -> either base button updated 
+            or the child row ticket or message or both -> returns true
+         */
         public bool UpdateButton(UpdateButtonRequestDto request)
         {
             ValidationExtensions.ValidateModel(request);
@@ -405,6 +421,7 @@ namespace Ticketing_Screen_Designer.Services
                         scope.Complete();
                         return true;
                     }
+
                     return false;
                 }
                 catch (NotSupportedException)

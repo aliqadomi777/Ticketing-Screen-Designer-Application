@@ -42,6 +42,7 @@ namespace _2__Ticketing_Screen_Designer.UI
             refreshList();
 
         }
+
         public void centerTitle()
         {
             int titleWidth = TextRenderer.MeasureText(ScreenTitleLabel.Text, ScreenTitleLabel.Font).Width;
