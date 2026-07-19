@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Buttons;
@@ -18,6 +17,7 @@ namespace _2__Ticketing_Screen_Designer.UI
         private readonly IButtonService _buttonService;
         private readonly IServiceTypeService _serviceTypeService;
         private readonly IButtonTypeService _buttonTypeService;
+        private bool _isNavigatingBack = false;
         public AddEditButton(
             IServiceProvider serviceProvider,
             IUiStateService stateService,
@@ -35,18 +35,10 @@ namespace _2__Ticketing_Screen_Designer.UI
             InitializeComponent();
         }
 
-        private void ButtonNameEnLabel_Click(object sender, EventArgs e)
-        {
 
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
         public void refreshForm()
         {
-
+            this.Text = "Add Button";
             var serviceTypes = _serviceTypeService.GetAllServices();
             var buttonTypes = _buttonTypeService.GetAllButtonTypes();
             ButtonActionList.DisplayMember = "DisplayText";
@@ -76,10 +68,11 @@ namespace _2__Ticketing_Screen_Designer.UI
             // Editing Existing Button
             if (button != null)
             {
-
                 ButtonNameEnTextBox.Text = button.ButtonNameEN;
                 ButtonNameArTextBox.Text = button.ButtonNameAR;
                 refreshForm();
+                this.Text = "Edit Button";
+
                 if (button is TicketButtonResponseDto ticketButton)
                 {
                     ServiceList.SelectedIndex = ServiceList.FindStringExact(ticketButton.ServiceName);
@@ -124,9 +117,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
-
-            _stateService.Clear<BaseButtonResponseDto>();
-
+            _isNavigatingBack = true;
             this.Close();
         }
         private void SaveButton_Click(object sender, EventArgs e)
@@ -145,7 +136,9 @@ namespace _2__Ticketing_Screen_Designer.UI
             bool coreChanged = false;
             bool ticketChanged = false;
             bool messageChanged = false;
-            if (ticketButton != null || messageButton != null)
+            bool buttonChanged = false;
+            bool buttonExists = ticketButton != null || messageButton != null;
+            if (buttonExists)
             {
                 //Checks if any changes occured on the existing button info 
                 string originalAction = button.TypeName;
@@ -162,11 +155,12 @@ namespace _2__Ticketing_Screen_Designer.UI
                 messageChanged = selectedAction == "Show Message" &&
                                      (ArMessageTextBox.Text != (messageButton?.MessageAR ?? string.Empty) ||
                                       EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
+                buttonChanged = ticketChanged || messageChanged || coreChanged;
             }
             try
             {
                 //Editing A button
-                if (ticketChanged || messageChanged || coreChanged)
+                if (buttonChanged && buttonExists)
                 {
                     //Detecting button action type change is handled by Backend (Button Repository)
 
@@ -206,18 +200,24 @@ namespace _2__Ticketing_Screen_Designer.UI
 
 
 
+
                     }
                     if (!isUpdated)
                     {
-                        MessageBox.Show("This Button has been deleted by someone else");
+                        MessageBox.Show("This Button has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else if (isUpdated)
                     {
-                        MessageBox.Show("Button Edited correctly");
+                        MessageBox.Show("Button Edited correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
 
 
 
+                }
+
+                else if (!buttonChanged && buttonExists)
+                {
+                    MessageBox.Show("Button's Information are up to date", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 //Adding A button
                 else
@@ -256,7 +256,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                     if (newButtonId > 0)
                     {
-                        MessageBox.Show("New Button has been created correctly");
+                        MessageBox.Show("New Button created correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     }
 
@@ -270,41 +270,45 @@ namespace _2__Ticketing_Screen_Designer.UI
             }
             catch (DuplicateRecordException)
             {
-                MessageBox.Show("A button with the same Name/s already exists");
+                MessageBox.Show("A button with the same Name/s already exists", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             catch (ParentDeletedWithChildConflictException)
             {
-                MessageBox.Show("The screen holding this button has been deleted");
+                MessageBox.Show("The screen holding this button has been deleted", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
             }
 
             catch (Exception)
             {
-                MessageBox.Show("A problem occured while editing the button");
+                MessageBox.Show("A problem occured while editing the button", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
             }
 
 
         }
 
-
-
-
-
         private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
+            _stateService.Clear<BaseButtonResponseDto>();
+            if (_isNavigatingBack && Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
             {
                 editScreenForm.refreshList();
                 editScreenForm.Show();
             }
+            else if (!_isNavigatingBack && e.CloseReason == CloseReason.UserClosing)
+            {
+                Environment.Exit(0);
+            }
         }
 
 
+        //changes shown data dynamically based on button action  
         private void ButtonActionList_SelectedIndexChanged(object sender, EventArgs e)
         {
             showHideDetail();
         }
+
+
     }
 }

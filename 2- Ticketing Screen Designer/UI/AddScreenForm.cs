@@ -49,7 +49,7 @@ namespace _2__Ticketing_Screen_Designer.UI
                 });
                 if (newScreenId > 0)
                 {
-                    MessageBox.Show($"Screen with name {enteredScreenName} successfully!");
+                    MessageBox.Show($"Created Screen with the name {enteredScreenName} successfully!");
                     NewScreenNameTextBox.Text = string.Empty;
                     NewScreenActiveButton.Checked = false;
                     NewScreenInactiveButton.Checked = true;

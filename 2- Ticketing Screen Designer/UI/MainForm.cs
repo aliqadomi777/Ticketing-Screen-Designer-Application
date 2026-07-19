@@ -90,13 +90,13 @@ namespace _2__Ticketing_Screen_Designer.UI
                     {
                         if (_screenService.DeleteScreen(screenIdToDelete))
                         {
-                            MessageBox.Show($"Successfully initiated deletion for Screen : {screenName}");
+                            MessageBox.Show($"Screen : {screenName} has been successfully deleted", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
 
                         }
                         else
                         {
-                            MessageBox.Show($"Screen is already deleted");
+                            MessageBox.Show($"Screen is already deleted", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                         screenList.Items.Remove(selectedScreen);
                         screenList.ClearSelected();
@@ -104,14 +104,14 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                     catch (Exception)
                     {
-                        MessageBox.Show($"A problem Occured while deleting this screen");
+                        MessageBox.Show($"A problem Occured while deleting this screen", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
 
             }
             else
             {
-                MessageBox.Show("Please select a screen to delete.");
+                MessageBox.Show("Please select a screen to delete.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -134,14 +134,14 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                     else
                     {
-                        MessageBox.Show("This screen has been deleted by someone");
+                        MessageBox.Show("This screen has been deleted by someone", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         refreshList();
                     }
                 }
 
                 catch (Exception)
                 {
-                    MessageBox.Show("A problem occured while Retrieving screen info");
+                    MessageBox.Show("A problem occured while Retrieving screen info", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 }
 
@@ -150,7 +150,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
             else
             {
-                MessageBox.Show("Please select a screen to Edit.");
+                MessageBox.Show("Please select a screen to Edit.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

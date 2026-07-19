@@ -20,7 +20,6 @@ namespace Ticketing_Screen_Designer.Services
         public int CreateBank(CreateBankRequestDto request)
         {
             ValidationExtensions.ValidateModel(request);
-
             try
             {
                 var bankModel = new BankModel
@@ -59,6 +58,7 @@ namespace Ticketing_Screen_Designer.Services
         }
         public BankResponseDto GetBankDetails(int bankId)
         {
+
             if (bankId <= 0)
             {
                 throw new ArgumentException(

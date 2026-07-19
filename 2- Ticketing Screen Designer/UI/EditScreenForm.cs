@@ -18,6 +18,7 @@ namespace _2__Ticketing_Screen_Designer.UI
         private readonly IServiceProvider _serviceProvider;
         private readonly IUiStateService _stateService;
         private readonly IButtonService _buttonService;
+        private bool _isNavigatingBack = false;
         public EditScreenForm(IScreenService screenService,
             IServiceProvider serviceProvider, IUiStateService stateService,
             IButtonService buttonService)
@@ -63,32 +64,34 @@ namespace _2__Ticketing_Screen_Designer.UI
                     {
                         var updatedScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
                         _stateService.Set(updatedScreen);
-                        MessageBox.Show($"Updated correctly");
+                        MessageBox.Show($"Updated correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
+                // should check info from DB first could be deleted same for buttons important must be checked 
                 else
                 {
-                    MessageBox.Show($"The current info are up to date");
+                    MessageBox.Show($"The current info are up to date", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 }
             }
             catch (ValidationException ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (ExcessiveScreenActivationException)
             {
-                MessageBox.Show("A screen is already active");
+                MessageBox.Show("A screen is already active", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             catch (DuplicateRecordException)
             {
-                MessageBox.Show("A screen with the same name already exists");
+                MessageBox.Show("A screen with the same name already exists", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
             }
+
             catch (Exception)
             {
-                MessageBox.Show("A problem occured while updating screen");
+                MessageBox.Show("A problem occured while updating screen", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
 
@@ -96,6 +99,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
+            _isNavigatingBack = true;
             this.Close();
         }
 
@@ -124,13 +128,13 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                     else
                     {
-                        MessageBox.Show("This button has been deleted by someone");
+                        MessageBox.Show("This button has been deleted by someone", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         refreshList();
                     }
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show($"A problem Occured while retrieving info for this button");
+                    MessageBox.Show($"A problem Occured while retrieving info for this button", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 }
 
@@ -139,7 +143,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
             else
             {
-                MessageBox.Show("Please select a button to Edit.");
+                MessageBox.Show("Please select a button to Edit.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -160,27 +164,31 @@ namespace _2__Ticketing_Screen_Designer.UI
                     {
                         if (_buttonService.DeleteButton(buttonIdToDelete))
                         {
-                            MessageBox.Show($"Successfully initiated deletion for Screen : {selectedButton.ButtonNameEN}");
+                            MessageBox.Show(
+                                $"Successfully initiated deletion for Screen : {selectedButton.ButtonNameEN}",
+                                "Information",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
 
 
                         }
                         else
                         {
-                            MessageBox.Show($"Button is already deleted");
+                            MessageBox.Show($"Button is already deleted", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         }
                         ButtonsList.Items.Remove(selectedButton);
                         ButtonsList.ClearSelected();
                     }
                     catch (Exception)
                     {
-                        MessageBox.Show($"A problem Occured while deleting this button");
+                        MessageBox.Show($"A problem Occured while deleting this button", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
 
             }
             else
             {
-                MessageBox.Show("Please select a button to delete.");
+                MessageBox.Show("Please select a button to delete.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
@@ -214,7 +222,7 @@ namespace _2__Ticketing_Screen_Designer.UI
 
                 catch (Exception)
                 {
-                    MessageBox.Show($"A problem Occured while retrieving buttons for this screen");
+                    MessageBox.Show($"A problem Occured while retrieving buttons for this screen", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 }
             }
@@ -222,12 +230,19 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void EditScreenForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (Application.OpenForms["MainForm"] is MainForm mainForm)
+            if (_isNavigatingBack && Application.OpenForms["MainForm"] is MainForm mainForm)
             {
                 mainForm.refreshList();
                 mainForm.Show();
             }
+            else if (!_isNavigatingBack && e.CloseReason == CloseReason.UserClosing)
+            {
 
+                Environment.Exit(0);
+
+            }
         }
+
+
     }
 }

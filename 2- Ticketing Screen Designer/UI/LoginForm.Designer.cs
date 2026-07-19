@@ -91,10 +91,11 @@
             this.Controls.Add(this.LoginButton);
             this.Controls.Add(this.BankIdLabel);
             this.Controls.Add(this.BankIdTextBox);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "LoginForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "LoginForm";
+            this.Text = "Login";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.LoginForm_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();

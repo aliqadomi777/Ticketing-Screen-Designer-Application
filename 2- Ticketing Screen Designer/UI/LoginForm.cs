@@ -57,18 +57,18 @@ namespace _2__Ticketing_Screen_Designer.UI
                     }
                     else
                     {
-                        MessageBox.Show("Bank doesn't exist");
+                        MessageBox.Show("Bank doesn't exist", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
                 else
                 {
-                    MessageBox.Show("Please enter a valid number");
+                    MessageBox.Show("Please enter a valid number", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
 
             catch
             {
-                MessageBox.Show("A problem occured while logging into the bank");
+                MessageBox.Show("A problem occured while logging into the bank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

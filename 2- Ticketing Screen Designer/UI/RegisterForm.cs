@@ -37,20 +37,20 @@ namespace _2__Ticketing_Screen_Designer.UI
                     BankName = newBankName.Trim()
                 });
 
-                MessageBox.Show($"the new bank ID is {newBankId}");
+                MessageBox.Show($"the new bank ID is {newBankId}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (DuplicateRecordException)
             {
-                MessageBox.Show($"A bank with the name {newBankName} already exists");
+                MessageBox.Show($"A bank with the name {newBankName} already exists", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             catch (ValidationException ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             catch (Exception)
             {
-                MessageBox.Show("A problem occured while registering new bank");
+                MessageBox.Show("A problem occured while registering new bank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
         }

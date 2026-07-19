@@ -54,7 +54,6 @@
             this.ButtonNameEnLabel.Size = new System.Drawing.Size(157, 25);
             this.ButtonNameEnLabel.TabIndex = 0;
             this.ButtonNameEnLabel.Text = "Button Name EN";
-            this.ButtonNameEnLabel.Click += new System.EventHandler(this.ButtonNameEnLabel_Click);
             // 
             // ButtonNameArLabel
             // 
@@ -191,7 +190,7 @@
             // AddEditButton
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(861, 428);
+            this.ClientSize = new System.Drawing.Size(863, 432);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.CancelButton);
             this.Controls.Add(this.buttonDetailsLayout);
@@ -202,6 +201,7 @@
             this.Controls.Add(this.ButtonNameArLabel);
             this.Controls.Add(this.ButtonNameEnLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "AddEditButton";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AddEditButton";

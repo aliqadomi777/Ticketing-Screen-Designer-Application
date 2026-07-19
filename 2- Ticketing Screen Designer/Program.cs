@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Templates;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
@@ -36,10 +37,10 @@ namespace Ticketing_Screen_Designer
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Error()
                 .WriteTo.File(
-                    new ExpressionTemplate(
-                        template: "{ {@t: @t, @l: @l, @m: @m, @x: @x, ..@p} }\n"
+                    formatter: new ExpressionTemplate(
+                        template: "{ { Timestamp: ToString(@t, 'yyyy-MM-dd HH:mm:ss zzz'), Message: @m, Exception: @x, Parameters: @p } }\n"
                     ),
-                    logFilePath,
+                    path: logFilePath,
                     rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
@@ -57,16 +58,59 @@ namespace Ticketing_Screen_Designer
             if (!File.Exists(configPath))
             {
                 MessageBox.Show($"Configuration file not found:\n{configPath}");
-                return;
+                Environment.Exit(1);
+            }
+            IConfigurationSection connectionSection = null;
+            try
+            {
+                var configuration = new ConfigurationBuilder()
+                                    .AddJsonFile(configPath, optional: false)
+                                    .Build();
+
+                connectionSection = configuration.GetSection("ConnectionStrings:DefaultConnection");
+            }
+            catch (Exception)
+            {
+                MessageBox.Show($"Invalid DBconfig Format",
+                                "Error",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                Environment.Exit(1);
             }
 
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile(configPath, optional: false)
-                .Build();
 
-            string connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (!connectionSection.Exists())
+            {
+                MessageBox.Show("Connection string to database does not exist",
+                                "Error",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                Environment.Exit(1);
+            }
 
+            string server = connectionSection["Server"];
+            string database = connectionSection["Database"];
+            string userId = connectionSection["UserId"];
+            string password = connectionSection["Password"];
+            var missingFields = new List<string>();
 
+            if (string.IsNullOrWhiteSpace(server)) missingFields.Add("Server");
+            if (string.IsNullOrWhiteSpace(database)) missingFields.Add("Database");
+            if (string.IsNullOrWhiteSpace(userId)) missingFields.Add("UserId");
+            if (string.IsNullOrWhiteSpace(password)) missingFields.Add("Password");
+
+            if (missingFields.Count > 0)
+            {
+                string errorMessage = string.Join(", ", missingFields);
+                MessageBox.Show($"Connection string values cannot be empty for the following parameters: {errorMessage}",
+                                "Missing Configuration",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                Environment.Exit(1);
+            }
+
+            string connectionString = $"Server={server};Database={database};User Id={userId};Password={password};" +
+                         $"TrustServerCertificate=True;";
             var services = new ServiceCollection();
             services.AddSingleton<IUiStateService, UiStateService>();
 
@@ -120,8 +164,16 @@ namespace Ticketing_Screen_Designer
 
             using (var serviceProvider = services.BuildServiceProvider())
             {
-                var loginForm = serviceProvider.GetRequiredService<LoginForm>();
-                Application.Run(loginForm);
+                try
+                {
+                    var loginForm = serviceProvider.GetRequiredService<LoginForm>();
+                    Application.Run(loginForm);
+                }
+
+                catch (Exception)
+                {
+                    MessageBox.Show($"An Error occured", "Application Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
     }

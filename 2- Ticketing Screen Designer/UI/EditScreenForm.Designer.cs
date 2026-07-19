@@ -177,6 +177,7 @@
             this.Controls.Add(this.StatusLabel);
             this.Controls.Add(this.ScreenNameLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "EditScreenForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;

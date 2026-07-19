@@ -114,10 +114,11 @@
             this.Controls.Add(this.AddScreenButton);
             this.Controls.Add(this.TitleLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(6);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "MainForm";
+            this.Text = "Screen Management";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.Click += new System.EventHandler(this.MainForm_Click);

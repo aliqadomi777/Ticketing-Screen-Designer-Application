@@ -84,9 +84,10 @@
             this.Controls.Add(this.RegisterButton);
             this.Controls.Add(this.bankNameTextBox);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Name = "RegisterForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "RegisterForm";
+            this.Text = "Register";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.RegisterForm_FormClosed);
             this.ResumeLayout(false);
             this.PerformLayout();
