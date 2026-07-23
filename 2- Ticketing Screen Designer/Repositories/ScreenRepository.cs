@@ -101,19 +101,19 @@ namespace Ticketing_Screen_Designer.Repositories
         public int Add(ScreenModel screenModel)
         {
 
-            string deactivateQuery = @"
-                UPDATE Screens 
-                SET IsActive=0 
-                WHERE BankID=@BankID;";
+            //string deactivateQuery = @"
+            //    UPDATE Screens 
+            //    SET IsActive=0 
+            //    WHERE BankID=@BankID;";
 
             string query = @"
                 INSERT INTO Screens (ScreenName, IsActive, BankID)
                 VALUES(@ScreenName, @IsActive, @BankID);
                 SELECT CAST(SCOPE_IDENTITY() as int);";
-            if (screenModel.IsActive)
-            {
-                query = deactivateQuery + query;
-            }
+            //if (screenModel.IsActive)
+            //{
+            //    query = deactivateQuery + query;
+            //}
 
             try
             {
@@ -136,10 +136,16 @@ namespace Ticketing_Screen_Designer.Repositories
                     }
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == 2627)
             {
                 throw new DuplicateRecordException(
                     $"A Screen named '{screenModel.ScreenName}' already exists.",
+                    ex);
+            }
+            catch (SqlException ex) when (ex.Number == 2601)
+            {
+                throw new ExcessiveScreenActivationException(
+                    $"Another screen is already Active for the bank",
                     ex);
             }
 

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Interfaces.Services;
@@ -12,7 +11,7 @@ using Ticketing_Screen_Designer.Models;
 using Ticketing_Screen_Designer.Utils;
 namespace Ticketing_Screen_Designer.Services
 {
-    public class ButtonService : IButtonService
+    public class ButtonService : IButtonService, IAddButtonService
     {
         private readonly IButtonRepository<ButtonModel> _fetchButtonRepository;
         private readonly IUpdateableRepository<ButtonModel> _updateButtonRepository;
@@ -185,106 +184,84 @@ namespace Ticketing_Screen_Designer.Services
           
          */
 
-        public int AddButton(BaseButtonDto request)
+        public List<int> AddButtons(IEnumerable<BaseButtonDto> requests)
         {
+            var resultIds = new List<int>();
 
-            var button = new BaseButtonRequestDto
-            {
-                ButtonNameEN = request.ButtonNameEN,
-                ButtonNameAR = request.ButtonNameAR,
-                ButtonType = request.ButtonType,
-                ScreenId = request.ScreenId
-            };
-            ValidationExtensions.ValidateModel(button);
             using (var scope = new System.Transactions.TransactionScope(
                     System.Transactions.TransactionScopeOption.Required,
                      new System.Transactions.TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted }))
             {
                 try
                 {
-                    int newButtonId = _addButtonRepository.Add(new ButtonModel
-                    {
-                        ButtonNameAR = button.ButtonNameAR,
-                        ButtonType = button.ButtonType,
-                        ButtonNameEN = button.ButtonNameEN,
-                        ScreenId = button.ScreenId
-                    });
-                    int resultId;
-                    if (request is CreateTicketButtonRequestDto newTicketButton)
-                    {
-                        ValidationExtensions.ValidateModel(newTicketButton);
 
-                        resultId = _addTicketRepository.Add(new TicketModel
+                    foreach (var request in requests)
+                    {
+                        int newButtonId = 0;
+                        int resultId = 0;
+                        var button = new BaseButtonRequestDto
                         {
-                            ButtonId = newButtonId,
-                            ServiceId = newTicketButton.ServiceId
+                            ButtonNameEN = request.ButtonNameEN,
+                            ButtonNameAR = request.ButtonNameAR,
+                            ButtonType = request.ButtonType,
+                            ScreenId = request.ScreenId
+                        };
+                        newButtonId = _addButtonRepository.Add(new ButtonModel
+                        {
+                            ButtonNameAR = button.ButtonNameAR,
+                            ButtonType = button.ButtonType,
+                            ButtonNameEN = button.ButtonNameEN,
+                            ScreenId = button.ScreenId
                         });
 
-                    }
-                    else if (request is CreateMessageButtonRequestDto newMessageButton)
-                    {
-                        ValidationExtensions.ValidateModel(newMessageButton);
 
-                        resultId = _addMessageRepository.Add(new MessageModel
+                        if (request is CreateTicketButtonRequestDto newTicketButton)
                         {
-                            ButtonId = newButtonId,
-                            MessageEN = newMessageButton.MessageEN,
-                            MessageAR = newMessageButton.MessageAR,
-                        });
 
-                    }
-                    else
-                    {
-                        throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                            resultId = _addTicketRepository.Add(new TicketModel
+                            {
+                                ButtonId = newButtonId,
+                                ServiceId = newTicketButton.ServiceId
+                            });
+
+                        }
+                        else if (request is CreateMessageButtonRequestDto newMessageButton)
+                        {
+                            resultId = _addMessageRepository.Add(new MessageModel
+                            {
+                                ButtonId = newButtonId,
+                                MessageEN = newMessageButton.MessageEN,
+                                MessageAR = newMessageButton.MessageAR,
+                            });
+
+                        }
+                        else
+                        {
+                            throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                        }
+                        resultIds.Add(resultId);
+
                     }
                     scope.Complete();
+                    return resultIds;
 
-                    return resultId;
                 }
-                catch (NotSupportedException)
+                catch (Exception ex) when (ex is NotSupportedException || ex is ParentDeletedWithChildConflictException ||
+                                           ex is DuplicateRecordException || ex is ValidationException)
                 {
                     throw;
                 }
-
-                catch (DuplicateRecordException)
-                {
-                    throw;
-                }
-
-                catch (ParentDeletedWithChildConflictException)
-                {
-                    throw;
-                }
-
                 catch (SqlException ex)
                 {
-                    Log.Error(ex,
-                              "SQL error {SqlErrorNumber} while creating button '{ButtonNameEN}'.",
-                              ex.Number,
-                              request.ButtonNameEN);
-
-                    throw new DataAccessException(
-                        "A database error occurred while creating the button.",
-                        ex);
-                }
-
-                catch (ValidationException)
-                {
-                    throw;
+                    Log.Error(ex, "SQL error {SqlErrorNumber} while creating bulk buttons.", ex.Number);
+                    throw new DataAccessException("A database error occurred while creating the buttons.", ex);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex,
-                        "Unexpected error while creating button '{ButtonNameEN}'.",
-                        request.ButtonNameEN);
-
-                    throw new DataAccessException(
-                        "An unexpected error occurred while creating the button.",
-                        ex);
+                    Log.Error(ex, "Unexpected error while creating bulk buttons.");
+                    throw new DataAccessException("An unexpected error occurred while creating the buttons.", ex);
                 }
             }
-
-
         }
 
         /* 
@@ -299,9 +276,9 @@ namespace Ticketing_Screen_Designer.Services
             - updating a button while retaining the same button type : return when fetched button -> either base button updated 
             or the child row ticket or message or both -> returns true
          */
-        public bool UpdateButton(UpdateButtonRequestDto request)
+        public bool UpdateButtons(IEnumerable<UpdateButtonRequestDto> requests)
         {
-            ValidationExtensions.ValidateModel(request);
+
 
             using (var scope = new System.Transactions.TransactionScope(
         System.Transactions.TransactionScopeOption.Required,
@@ -309,183 +286,147 @@ namespace Ticketing_Screen_Designer.Services
             {
                 try
                 {
-                    bool isOperationSuccessful = false;
-                    var currentButton = _fetchButtonRepository.GetById(request.ButtonId, request.ButtonType);
-
-                    //Either button deleted or it's child type is 
-                    if (currentButton == null)
+                    foreach (var request in requests)
                     {
-                        var buttonModel = new ButtonModel
+                        var currentButton = _fetchButtonRepository.GetById(request.ButtonId, request.ButtonType);
+                        //Either button deleted or it's child type is 
+                        if (currentButton == null)
                         {
-                            ButtonNameAR = request.ButtonNameAR,
-                            ButtonNameEN = request.ButtonNameEN,
-                            ButtonType = request.ButtonType,
-                            ButtonId = request.ButtonId,
-                        };
-                        // if false : does not exist 
-                        bool isButtonUpdated = _updateButtonRepository.Update(buttonModel);
-                        if (!isButtonUpdated)
-                        {
-                            return false;
-                        }
-                        if (request.ButtonType == 1 && isButtonUpdated)
-                        {
-                            var ticket = (UpdateTicketButtonRequest)request;
-                            ValidationExtensions.ValidateModel(ticket);
-                            var ticketModel = new TicketModel
+                            var buttonModel = new ButtonModel
                             {
-                                ButtonId = ticket.ButtonId,
-                                ScreenId = ticket.ScreenId,
-                                ServiceId = ticket.ServiceId,
-                                ButtonNameEN = ticket.ButtonNameEN,
-                                ButtonNameAR = ticket.ButtonNameAR,
-                                ButtonType = ticket.ButtonType
+                                ButtonNameAR = request.ButtonNameAR,
+                                ButtonNameEN = request.ButtonNameEN,
+                                ButtonType = request.ButtonType,
+                                ButtonId = request.ButtonId,
                             };
-                            bool isDeleted = _deleteMessageRepository.Delete(request.ButtonId);
-                            if (isDeleted)
+                            // if false : does not exist 
+                            bool isButtonUpdated = _updateButtonRepository.Update(buttonModel);
+                            if (request.ButtonType == 1 && isButtonUpdated)
                             {
-                                int resultId = _addTicketRepository.Add(ticketModel);
-                                isOperationSuccessful = (resultId > 0);
+                                var ticket = (UpdateTicketButtonRequest)request;
+                                var ticketModel = new TicketModel
+                                {
+                                    ButtonId = ticket.ButtonId,
+                                    ScreenId = ticket.ScreenId,
+                                    ServiceId = ticket.ServiceId,
+                                    ButtonNameEN = ticket.ButtonNameEN,
+                                    ButtonNameAR = ticket.ButtonNameAR,
+                                    ButtonType = ticket.ButtonType
+                                };
+                                bool isDeleted = _deleteMessageRepository.Delete(request.ButtonId);
+                                _addTicketRepository.Add(ticketModel);
 
                             }
-                        }
-                        else if (request.ButtonType == 2 && isButtonUpdated)
-                        {
-                            var message = (UpdateMessageButtonRequest)request;
-                            ValidationExtensions.ValidateModel(message);
+                            else if (request.ButtonType == 2 && isButtonUpdated)
+                            {
+                                var message = (UpdateMessageButtonRequest)request;
 
-                            var messageModel = new MessageModel
-                            {
-                                ButtonId = message.ButtonId,
-                                ScreenId = message.ScreenId,
-                                ButtonNameAR = message.ButtonNameAR,
-                                ButtonNameEN = message.ButtonNameEN,
-                                MessageAR = message.MessageAR,
-                                MessageEN = message.MessageEN,
-                                ButtonType = message.ButtonType
-                            };
-                            bool isDeleted = _deleteTicketRepository.Delete(request.ButtonId);
-                            if (isDeleted)
-                            {
-                                int resultId = _addMessageRepository.Add(messageModel);
-                                isOperationSuccessful = (resultId > 0);
+                                var messageModel = new MessageModel
+                                {
+                                    ButtonId = message.ButtonId,
+                                    ScreenId = message.ScreenId,
+                                    ButtonNameAR = message.ButtonNameAR,
+                                    ButtonNameEN = message.ButtonNameEN,
+                                    MessageAR = message.MessageAR,
+                                    MessageEN = message.MessageEN,
+                                    ButtonType = message.ButtonType
+                                };
+                                bool isDeleted = _deleteTicketRepository.Delete(request.ButtonId);
+                                _addMessageRepository.Add(messageModel);
+
                             }
-                        }
 
-                        else
-                        {
-                            throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
-                        }
+                            //else
+                            //{
+                            //    throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                            //}
 
-
-                    }
-
-                    //Editing the same button retaining the same type
-                    else if (request.ButtonType == currentButton.ButtonType)
-                    {
-                        var buttonModel = new ButtonModel
-                        {
-                            ButtonNameAR = request.ButtonNameAR,
-                            ButtonNameEN = request.ButtonNameEN,
-                            ButtonType = request.ButtonType,
-                            ButtonId = request.ButtonId,
-                        };
-                        bool isButtonUpdated = _updateButtonRepository.Update(buttonModel);
-
-                        if (request is UpdateTicketButtonRequest updatedTicket)
-                        {
-                            bool isTicketUpdated = _updateTicketRepository.Update(updatedTicket.ServiceId, updatedTicket.TicketId);
-                            isOperationSuccessful = isButtonUpdated || isTicketUpdated;
 
                         }
-                        else if (request is UpdateMessageButtonRequest updatedMessage)
+
+                        //Editing the same button retaining the same type
+                        else if (request.ButtonType == currentButton.ButtonType)
                         {
-                            bool isMessageUpdated = _updateMessageRepository.Update(new MessageModel
+                            var buttonModel = new ButtonModel
                             {
-                                MessageId = updatedMessage.messageId,
-                                MessageAR = updatedMessage.MessageAR,
-                                MessageEN = updatedMessage.MessageEN,
-                            });
-                            isOperationSuccessful = isButtonUpdated || isMessageUpdated;
+                                ButtonNameAR = request.ButtonNameAR,
+                                ButtonNameEN = request.ButtonNameEN,
+                                ButtonType = request.ButtonType,
+                                ButtonId = request.ButtonId,
+                            };
+                            bool isButtonUpdated = _updateButtonRepository.Update(buttonModel);
 
-                        }
-                        else
-                        {
-                            throw new NotSupportedException("Unsupported button type: " + request.ButtonType);
+                            if (request is UpdateTicketButtonRequest updatedTicket)
+                            {
+                                bool isTicketUpdated = _updateTicketRepository.Update(updatedTicket.ServiceId, updatedTicket.TicketId);
+                            }
+                            else if (request is UpdateMessageButtonRequest updatedMessage)
+                            {
+                                bool isMessageUpdated = _updateMessageRepository.Update(new MessageModel
+                                {
+                                    MessageId = updatedMessage.messageId,
+                                    MessageAR = updatedMessage.MessageAR,
+                                    MessageEN = updatedMessage.MessageEN,
+                                });
+                            }
+
+
                         }
 
 
                     }
-                    if (isOperationSuccessful)
-                    {
-                        scope.Complete();
-                        return true;
-                    }
-
-                    return false;
+                    scope.Complete();
+                    return true;
                 }
-                catch (NotSupportedException)
-                {
-                    throw;
-                }
-                catch (DuplicateRecordException)
+                catch (Exception ex) when (ex is NotSupportedException || ex is DuplicateRecordException)
                 {
                     throw;
                 }
                 catch (SqlException ex)
                 {
-                    Log.Error(ex,
-                              "SQL error {SqlErrorNumber} while updating button '{ButtonNameEN}'.",
-                              ex.Number,
-                              request.ButtonNameEN);
-
-                    throw new DataAccessException(
-                        "A database error occurred while updating the button.",
-                        ex);
+                    Log.Error(ex, "SQL error {SqlErrorNumber} while updating bulk buttons.", ex.Number);
+                    throw new DataAccessException("A database error occurred while updating the buttons.", ex);
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex,
-                        "Unexpected error while updating button '{ButtonNameEN}'.",
-                        request.ButtonNameEN);
-
-                    throw new DataAccessException(
-                        "An unexpected error occurred while updating the button.",
-                        ex);
+                    Log.Error(ex, "Unexpected error while updating bulk buttons.");
+                    throw new DataAccessException("An unexpected error occurred while updating the buttons.", ex);
                 }
             }
-
-
         }
-        public bool DeleteButton(int buttonId)
+        public bool DeleteButtons(IEnumerable<int> buttonIds)
         {
-            try
+            using (var scope = new System.Transactions.TransactionScope(
+                System.Transactions.TransactionScopeOption.Required,
+                new System.Transactions.TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted }))
             {
-                bool isDeleted = _deleteButtonRepository.Delete(buttonId);
-                return isDeleted;
-            }
-            catch (SqlException ex)
-            {
-                Log.Error(ex,
-                          "SQL error {SqlErrorNumber} while deleting button with ID: '{buttonId}'.",
-                          ex.Number,
-                          buttonId);
+                try
+                {
+                    foreach (var buttonId in buttonIds)
+                    {
+                        bool isDeleted = _deleteButtonRepository.Delete(buttonId);
+                    }
 
-                throw new DataAccessException(
-                    "A database error occurred while deleting the button.",
-                    ex);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex,
-                    "Unexpected error while deleting button with ID: '{buttonId}'.",
-                    buttonId);
-
-                throw new DataAccessException(
-                    "An unexpected error occurred while deleting the button.",
-                    ex);
+                    scope.Complete();
+                    return true;
+                }
+                catch (KeyNotFoundException)
+                {
+                    throw;
+                }
+                catch (SqlException ex)
+                {
+                    Log.Error(ex, "SQL error {SqlErrorNumber} while deleting bulk buttons.", ex.Number);
+                    throw new DataAccessException("A database error occurred while deleting the buttons.", ex);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Unexpected error while deleting bulk buttons.");
+                    throw new DataAccessException("An unexpected error occurred while deleting the buttons.", ex);
+                }
             }
         }
+
 
     }
 }

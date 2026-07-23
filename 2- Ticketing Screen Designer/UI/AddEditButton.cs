@@ -1,44 +1,41 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.DTO.ButtonTypes;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.DTO.Services;
 using Ticketing_Screen_Designer.Interfaces.Services;
+using Ticketing_Screen_Designer.Models;
 using Ticketing_Screen_Designer.Utils;
 
 namespace _2__Ticketing_Screen_Designer.UI
 {
     public partial class AddEditButton : Form
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly IUiStateService _stateService;
-        private readonly IButtonService _buttonService;
         private readonly IServiceTypeService _serviceTypeService;
         private readonly IButtonTypeService _buttonTypeService;
+
         private bool _isNavigatingBack = false;
         public AddEditButton(
-            IServiceProvider serviceProvider,
             IUiStateService stateService,
-            IButtonService buttonService,
             IServiceTypeService serviceTypeService,
             IButtonTypeService buttonTypeService
             )
         {
-            _serviceProvider = serviceProvider;
             _stateService = stateService;
-            _buttonService = buttonService;
             _serviceTypeService = serviceTypeService;
             _buttonTypeService = buttonTypeService;
-
             InitializeComponent();
         }
 
 
         public void refreshForm()
         {
-            this.Text = "Add Button";
+
             var serviceTypes = _serviceTypeService.GetAllServices();
             var buttonTypes = _buttonTypeService.GetAllButtonTypes();
             ButtonActionList.DisplayMember = "DisplayText";
@@ -58,38 +55,113 @@ namespace _2__Ticketing_Screen_Designer.UI
             ServiceList.SelectedIndex = 0;
             showHideDetail();
         }
+        private void loadInfo(object button)
+        {
+            refreshForm();
+
+            if (button == null) return;
+
+            if (button is BaseButtonDto baseBtn)
+            {
+                ButtonNameEnTextBox.Text = baseBtn.ButtonNameEN;
+                ButtonNameArTextBox.Text = baseBtn.ButtonNameAR;
+            }
+            else if (button is UpdateButtonRequestDto updateBtn)
+            {
+                ButtonNameEnTextBox.Text = updateBtn.ButtonNameEN;
+                ButtonNameArTextBox.Text = updateBtn.ButtonNameAR;
+            }
+
+            if (button is TicketButtonResponseDto ticketButton)
+            {
+                ServiceList.SelectedItem = ServiceList.Items.Cast<ServiceTypeResponseDto>()
+                    .FirstOrDefault(s => s.ServicesName == ticketButton.ServiceName);
+            }
+            else if (button is UpdateTicketButtonRequest dbTicket)
+            {
+                ServiceList.SelectedItem = ServiceList.Items.Cast<ServiceTypeResponseDto>()
+                    .FirstOrDefault(s => s.ServiceId == dbTicket.ServiceId);
+            }
+
+            else if (button is MessageButtonResponseDto messageButton)
+            {
+                EnMessageTextBox.Text = messageButton.MessageEN;
+                ArMessageTextBox.Text = messageButton.MessageAR;
+            }
+            else if (button is UpdateMessageButtonRequest dbMessage)
+            {
+                EnMessageTextBox.Text = dbMessage.MessageEN;
+                ArMessageTextBox.Text = dbMessage.MessageAR;
+            }
+        }
 
         private void AddEditButton_Load(object sender, EventArgs e)
         {
-
+            this.Text = "Add Button";
             var button = _stateService.Get<BaseButtonResponseDto>();
+            var dbButtonUpdate = _stateService.Get<UpdateButtonRequestDto>();
+            var nonDbButton = _stateService.Get<BaseButtonDto>();
+
+            var nonDbTicket = nonDbButton as CreateTicketButtonRequestDto;
+            var nonDbMessage = nonDbButton as CreateMessageButtonRequestDto;
+            var dbTicket = dbButtonUpdate as UpdateTicketButtonRequest;
+            var dbMessage = dbButtonUpdate as UpdateMessageButtonRequest;
+
             refreshForm();
 
-            // Editing Existing Button
             if (button != null)
             {
-                ButtonNameEnTextBox.Text = button.ButtonNameEN;
-                ButtonNameArTextBox.Text = button.ButtonNameAR;
-                refreshForm();
                 this.Text = "Edit Button";
 
-                if (button is TicketButtonResponseDto ticketButton)
-                {
-                    ServiceList.SelectedIndex = ServiceList.FindStringExact(ticketButton.ServiceName);
-
-                }
-
-                else if (button is MessageButtonResponseDto messageButton)
-                {
-                    EnMessageTextBox.Text = messageButton.MessageEN;
-                    ArMessageTextBox.Text = messageButton.MessageAR;
-                }
-
-                ButtonActionList.SelectedIndex = ButtonActionList.FindStringExact(button.TypeName);
-
+                loadInfo(button);
+                ButtonActionList.SelectedItem = ButtonActionList.Items.Cast<ButtonTypeResponseDto>()
+                    .FirstOrDefault(b => b.TypeName == button.TypeName);
             }
+            else if (nonDbButton != null)
+            {
+                this.Text = "Edit Button";
 
+                ButtonNameEnTextBox.Text = nonDbButton.ButtonNameEN;
+                ButtonNameArTextBox.Text = nonDbButton.ButtonNameAR;
+
+                if (nonDbTicket != null)
+                {
+
+                    ButtonActionList.SelectedItem = ButtonActionList.Items.Cast<ButtonTypeResponseDto>()
+                        .FirstOrDefault(b => b.TypeId == nonDbTicket.ButtonType);
+
+                    ServiceList.SelectedItem = ServiceList.Items.Cast<ServiceTypeResponseDto>()
+                        .FirstOrDefault(s => s.ServiceId == nonDbTicket.ServiceId);
+                }
+                else if (nonDbMessage != null)
+                {
+
+                    ButtonActionList.SelectedItem = ButtonActionList.Items.Cast<ButtonTypeResponseDto>()
+                        .FirstOrDefault(b => b.TypeId == nonDbMessage.ButtonType);
+
+                    EnMessageTextBox.Text = nonDbMessage.MessageEN;
+                    ArMessageTextBox.Text = nonDbMessage.MessageAR;
+                }
+            }
+            else if (dbButtonUpdate != null)
+            {
+                this.Text = "Edit Button";
+
+                loadInfo(dbButtonUpdate);
+
+                if (dbTicket != null)
+                {
+                    ButtonActionList.SelectedItem = ButtonActionList.Items.Cast<ButtonTypeResponseDto>()
+                        .FirstOrDefault(b => b.TypeId == dbTicket.ButtonType);
+                }
+                else if (dbMessage != null)
+                {
+                    ButtonActionList.SelectedItem = ButtonActionList.Items.Cast<ButtonTypeResponseDto>()
+                        .FirstOrDefault(b => b.TypeId == dbMessage.ButtonType);
+                }
+            }
         }
+
 
         //Method to toggle Combo boxes and text boxes based on button action
         private void showHideDetail()
@@ -115,29 +187,43 @@ namespace _2__Ticketing_Screen_Designer.UI
             }
         }
 
+
+
         private void CancelButton_Click(object sender, EventArgs e)
         {
+
+
             _isNavigatingBack = true;
             this.Close();
         }
         private void SaveButton_Click(object sender, EventArgs e)
         {
+
             var button = _stateService.Get<BaseButtonResponseDto>();
             var screen = _stateService.Get<ScreenResponseDto>();
+
+            var dbButtonUpdate = _stateService.Get<UpdateButtonRequestDto>();
+            var nonDbButtonUpdate = _stateService.Get<BaseButtonDto>();
+
             string selectedAction = ButtonActionList.Text;
             var selectedButtonType = ButtonActionList.SelectedItem as ButtonTypeResponseDto;
-
-
+            var listOfPendingUpdatedButtons = _stateService.Get<List<UpdateButtonRequestDto>>() ?? new List<UpdateButtonRequestDto>();
+            var listOfPendingCreatedButtons = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
+            var listDbButtons = _stateService.Get<List<BaseButtonResponseDto>>();
             var selectedServiceType = ServiceList.SelectedItem as ServiceTypeResponseDto;
 
             var ticketButton = button as TicketButtonResponseDto;
             var messageButton = button as MessageButtonResponseDto;
+
+            // check if pending messages or tickets if we wanted to update them 
+
 
             bool coreChanged = false;
             bool ticketChanged = false;
             bool messageChanged = false;
             bool buttonChanged = false;
             bool buttonExists = ticketButton != null || messageButton != null;
+
             if (buttonExists)
             {
                 //Checks if any changes occured on the existing button info 
@@ -148,7 +234,6 @@ namespace _2__Ticketing_Screen_Designer.UI
                                   originalAction != selectedAction;
 
 
-
                 ticketChanged = selectedAction == "Issue Ticket" &&
                                     (selectedServiceType?.ServiceId != (ticketButton?.ServiceId));
 
@@ -157,63 +242,80 @@ namespace _2__Ticketing_Screen_Designer.UI
                                       EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
                 buttonChanged = ticketChanged || messageChanged || coreChanged;
             }
+
             try
             {
-                //Editing A button
-                if (buttonChanged && buttonExists)
+
+                //Editing A button from DB 
+                if ((buttonChanged && buttonExists) || dbButtonUpdate != null)
                 {
+                    int activeButtonId = dbButtonUpdate?.ButtonId ?? button?.ButtonId ?? 0;
                     //Detecting button action type change is handled by Backend (Button Repository)
-
-
-                    bool isUpdated = false;
+                    if (dbButtonUpdate != null)
+                    {
+                        listOfPendingUpdatedButtons.RemoveAll(b => b.ButtonId == activeButtonId);
+                    }
                     if (selectedAction == "Issue Ticket")
                     {
                         var updatedTicketButton = new UpdateTicketButtonRequest
                         {
                             ButtonNameAR = ButtonNameArTextBox.Text,
                             ButtonNameEN = ButtonNameEnTextBox.Text,
-                            ButtonId = button.ButtonId,
+                            ButtonId = activeButtonId,
                             ButtonType = selectedButtonType.TypeId,
                             ServiceId = selectedServiceType.ServiceId,
                             TicketId = ticketButton?.TicketId ?? 0,
                         };
 
-                        isUpdated = _buttonService.UpdateButton(updatedTicketButton);
+                        if (!checkIfExists(updatedTicketButton, activeButtonId))
+                        {
+                            ValidationExtensions.ValidateModel(updatedTicketButton);
+                            listOfPendingUpdatedButtons.Add(updatedTicketButton);
+                            _stateService.Set(listOfPendingUpdatedButtons);
+                            MessageBox.Show("Button has been Updated", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _isNavigatingBack = true;
+                            this.Close();
+                        }
+
+
                     }
 
 
 
                     else if (selectedAction == "Show Message")
                     {
-
+                        if (dbButtonUpdate != null)
+                        {
+                            listOfPendingUpdatedButtons.RemoveAll(b => b.ButtonId == activeButtonId);
+                        }
                         var updatedMessageButton = new UpdateMessageButtonRequest
                         {
                             ButtonNameAR = ButtonNameArTextBox.Text,
                             ButtonNameEN = ButtonNameEnTextBox.Text,
-                            ButtonId = button.ButtonId,
+                            ButtonId = activeButtonId,
                             ButtonType = selectedButtonType.TypeId,
                             messageId = messageButton?.MessageId ?? 0,
                             MessageAR = ArMessageTextBox.Text,
                             MessageEN = EnMessageTextBox.Text,
                         };
-                        isUpdated = _buttonService.UpdateButton(updatedMessageButton);
-
-
+                        if (!checkIfExists(updatedMessageButton, activeButtonId))
+                        {
+                            ValidationExtensions.ValidateModel(updatedMessageButton);
+                            listOfPendingUpdatedButtons.Add(updatedMessageButton);
+                            _stateService.Set(listOfPendingUpdatedButtons);
+                            MessageBox.Show("Button has been Updated", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            _isNavigatingBack = true;
+                            this.Close();
+                        }
 
 
                     }
-                    if (!isUpdated)
-                    {
-                        MessageBox.Show("This Button has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    else if (isUpdated)
-                    {
-                        MessageBox.Show("Button Edited correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
+
 
 
 
                 }
+
 
                 else if (!buttonChanged && buttonExists)
                 {
@@ -223,43 +325,44 @@ namespace _2__Ticketing_Screen_Designer.UI
                 else
                 {
 
-                    int newButtonId = 0;
                     if (selectedAction == "Issue Ticket")
                     {
-
                         var newButton = new CreateTicketButtonRequestDto
                         {
-                            ScreenId = screen.ScreenId,
+                            ScreenId = screen?.ScreenId ?? 0,
                             ButtonNameEN = ButtonNameEnTextBox.Text,
                             ButtonNameAR = ButtonNameArTextBox.Text,
                             ServiceId = selectedServiceType.ServiceId,
                             ButtonType = selectedButtonType.TypeId
-
-
                         };
-                        newButtonId = _buttonService.AddButton(newButton);
+                        ValidationExtensions.ValidateModel(newButton);
+                        if (SaveOrUpdatePendingButton(newButton, nonDbButtonUpdate))
+                        {
+                            _isNavigatingBack = true;
+                            this.Close();
+                        }
+
+
                     }
                     else if (selectedAction == "Show Message")
                     {
                         var newButton = new CreateMessageButtonRequestDto
                         {
-                            ScreenId = screen.ScreenId,
+                            ScreenId = screen?.ScreenId ?? 0,
                             ButtonNameEN = ButtonNameEnTextBox.Text,
                             ButtonNameAR = ButtonNameArTextBox.Text,
                             ButtonType = selectedButtonType.TypeId,
                             MessageAR = ArMessageTextBox.Text,
                             MessageEN = EnMessageTextBox.Text
-
                         };
-                        newButtonId = _buttonService.AddButton(newButton);
+                        ValidationExtensions.ValidateModel(newButton);
+
+                        if (SaveOrUpdatePendingButton(newButton, nonDbButtonUpdate))
+                        {
+                            _isNavigatingBack = true;
+                            this.Close();
+                        }
                     }
-
-                    if (newButtonId > 0)
-                    {
-                        MessageBox.Show("New Button created correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    }
-
 
                 }
 
@@ -268,16 +371,8 @@ namespace _2__Ticketing_Screen_Designer.UI
             {
                 MessageBox.Show(ex.Message);
             }
-            catch (DuplicateRecordException)
-            {
-                MessageBox.Show("A button with the same Name/s already exists", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
 
-            catch (ParentDeletedWithChildConflictException)
-            {
-                MessageBox.Show("The screen holding this button has been deleted", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-            }
 
             catch (Exception)
             {
@@ -287,6 +382,63 @@ namespace _2__Ticketing_Screen_Designer.UI
 
 
         }
+
+        //Method helper for either updating an existing pending update button (originally a db button) or creating a new button 
+        private bool SaveOrUpdatePendingButton(BaseButtonDto newButton, BaseButtonDto nonDbButtonUpdate)
+        {
+            var listOfPendingCreatedButtons = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
+
+            int exactIndex = nonDbButtonUpdate != null ? listOfPendingCreatedButtons.IndexOf(nonDbButtonUpdate) : -1;
+
+            if (checkIfExists(newButton, updatingNonDbIndex: exactIndex))
+            {
+                return false;
+            }
+
+            if (exactIndex != -1)
+            {
+                listOfPendingCreatedButtons[exactIndex] = newButton;
+
+            }
+            else
+            {
+                listOfPendingCreatedButtons.Add(newButton);
+            }
+
+            _stateService.Set(listOfPendingCreatedButtons);
+
+            string msg = exactIndex != -1 ? "The button has been updated" : "A new button has been created";
+            MessageBox.Show(msg, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return true;
+        }
+
+        //A helper method to prevent duplicate button names and if found prevent user from commiting (no backend checking for duplicates)
+        private bool checkIfExists(BaseButtonDto newButton, int currentButtonId = 0, int? updatingNonDbIndex = null)
+        {
+            var listOfPendingUpdatedButtons = _stateService.Get<List<UpdateButtonRequestDto>>() ?? new List<UpdateButtonRequestDto>();
+            var listOfPendingCreatedButtons = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
+            var listDbButtons = _stateService.Get<List<BaseButtonResponseDto>>() ?? new List<BaseButtonResponseDto>();
+            var pendingDeletes = _stateService.Get<List<int>>() ?? new List<int>();
+
+            bool isDuplicateInCreated = listOfPendingCreatedButtons
+                .Select((b, idx) => new { Button = b, Index = idx })
+                .Any(x => (x.Button.ButtonNameEN == newButton.ButtonNameEN || x.Button.ButtonNameAR == newButton.ButtonNameAR)
+                          && x.Index != updatingNonDbIndex);
+
+            bool isDuplicateInUpdated = listOfPendingUpdatedButtons
+                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR) && b.ButtonId != currentButtonId);
+
+            bool isDuplicateInDb = listDbButtons
+                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR) && b.ButtonId != currentButtonId && !pendingDeletes.Contains(b.ButtonId));
+
+            if (isDuplicateInCreated || isDuplicateInUpdated || isDuplicateInDb)
+            {
+                MessageBox.Show("A button already exists with the same English or Arabic name.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return true;
+            }
+            return false;
+        }
+
 
         private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
         {

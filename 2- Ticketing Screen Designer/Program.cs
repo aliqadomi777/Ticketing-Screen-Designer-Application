@@ -152,11 +152,13 @@ namespace Ticketing_Screen_Designer
             services.AddTransient<IFetchableRepository<ServiceType>>(provider => new ServiceRepository(connectionString));
             services.AddTransient<IServiceTypeService, ServiceTypeService>();
 
+            services.AddTransient<IAddButtonService, ButtonService>();
+
+
             services.AddTransient<LoginForm>();
             services.AddTransient<MainForm>();
             services.AddTransient<RegisterForm>();
             services.AddTransient<EditScreenForm>();
-            services.AddTransient<AddScreenForm>();
             services.AddTransient<AddEditButton>();
 
 

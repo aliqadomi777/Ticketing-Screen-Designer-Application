@@ -156,7 +156,13 @@ namespace _2__Ticketing_Screen_Designer.UI
 
         private void AddScreenButton_Click(object sender, EventArgs e)
         {
-            var addScreen = _serviceProvider.GetRequiredService<AddScreenForm>();
+            //var addScreen = _serviceProvider.GetRequiredService<AddScreenForm>();
+            //addScreen.Show();
+            //this.Hide();
+            _stateService.Clear<BaseScreenRequestDto>();
+            _stateService.Clear<CreateScreenRequestDto>();
+
+            var addScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
             addScreen.Show();
             this.Hide();
 

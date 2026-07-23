@@ -17,5 +17,12 @@ namespace Ticketing_Screen_Designer.DTO.Buttons
         public string MessageAR { get; set; }
 
         public string ButtonId { get; set; }
+        public override string DisplayText
+        {
+            get
+            {
+                return base.DisplayText + $"Show Message (pending)";
+            }
+        }
     }
 }

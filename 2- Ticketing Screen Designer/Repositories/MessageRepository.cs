@@ -61,7 +61,7 @@ namespace Ticketing_Screen_Designer.Repositories
             using (var conn = new SqlConnection(ConnectionString))
             using (var cmd = new SqlCommand(query, conn))
             {
-                cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = messageModel.ButtonId;
+                cmd.Parameters.Add("@MessageID", SqlDbType.Int).Value = messageModel.MessageId;
                 cmd.Parameters.Add("@MessageEN", SqlDbType.NVarChar, 500).Value = messageModel.MessageEN;
                 cmd.Parameters.Add("@MessageAR", SqlDbType.NVarChar, 500).Value = messageModel.MessageAR;
                 conn.Open();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
+using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
 using Ticketing_Screen_Designer.Interfaces.Services;
@@ -18,18 +19,22 @@ namespace Ticketing_Screen_Designer.Services
         private readonly IUpdateableRepository<ScreenModel> _updateRepository;
         private readonly IDeleteableRepository<ScreenModel> _deleteRepository;
         private readonly IListableRepository<ScreenModel> _listRepository;
+
+        private readonly IAddButtonService _addButtonService;
         public ScreenService(
             IFetchableRepository<ScreenModel> fetchRepository,
             IAddableRepository<ScreenModel> addRepository,
             IUpdateableRepository<ScreenModel> updateRepository,
             IDeleteableRepository<ScreenModel> deleteRepository,
-            IListableRepository<ScreenModel> listRepository)
+            IListableRepository<ScreenModel> listRepository,
+            IAddButtonService addButtonService)
         {
             _fetchRepository = fetchRepository;
             _addRepository = addRepository;
             _updateRepository = updateRepository;
             _deleteRepository = deleteRepository;
             _listRepository = listRepository;
+            _addButtonService = addButtonService;
         }
         public ScreenResponseDto GetScreenDetails(int screenId)
         {
@@ -116,20 +121,20 @@ namespace Ticketing_Screen_Designer.Services
                     ex);
             }
         }
-        public int AddScreen(CreateScreenRequestDto request)
+        public int AddScreen(CreateScreenRequestDto screenRequest)
         {
-            ValidationExtensions.ValidateModel(request);
             try
             {
+                ValidationExtensions.ValidateModel(screenRequest);
                 var screenModel = new ScreenModel
                 {
-                    ScreenName = request.ScreenName,
-                    BankId = request.BankId,
-                    IsActive = request.IsActive,
+                    ScreenName = screenRequest.ScreenName,
+                    BankId = screenRequest.BankId,
+                    IsActive = screenRequest.IsActive,
 
                 };
-                int generatedId = _addRepository.Add(screenModel);
-                return generatedId;
+                int newScreenId = _addRepository.Add(screenModel);
+                return newScreenId;
             }
 
             catch (DuplicateRecordException)
@@ -141,13 +146,16 @@ namespace Ticketing_Screen_Designer.Services
             {
                 throw;
             }
-
+            catch (ExcessiveScreenActivationException)
+            {
+                throw;
+            }
             catch (SqlException ex)
             {
                 Log.Error(ex,
                           "SQL error {SqlErrorNumber} while creating Screen '{ScreenName}'.",
                           ex.Number,
-                          request.ScreenName);
+                          screenRequest.ScreenName);
 
                 throw new DataAccessException(
                     "A database error occurred while creating the screen.",
@@ -157,7 +165,7 @@ namespace Ticketing_Screen_Designer.Services
             {
                 Log.Error(ex,
                     "Unexpected error while creating screen '{ScreenName}'.",
-                    request.ScreenName);
+                    screenRequest.ScreenName);
 
                 throw new DataAccessException(
                     "An unexpected error occurred while creating the Screen.",

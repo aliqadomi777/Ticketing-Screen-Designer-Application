@@ -1,10 +1,10 @@
 {
   "ConnectionStrings": {
     "DefaultConnection": {
-      "Server": "",
-      "Database": "",
-      "UserId": "",
-      "Password": "",
+      "Server": "localhost",
+      "Database": "ticketDesignerDB",
+      "UserId": "sa",
+      "Password": "Sedc0@123",
       "TrustServerCertificate": ""
     }
   }

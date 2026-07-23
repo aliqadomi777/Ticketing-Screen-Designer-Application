@@ -196,12 +196,6 @@
     <Compile Include="UI\AddEditButton.Designer.cs">
       <DependentUpon>AddEditButton.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\AddScreenForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\AddScreenForm.Designer.cs">
-      <DependentUpon>AddScreenForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="UI\EditScreenForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -241,9 +235,6 @@
     </Compile>
     <EmbeddedResource Include="UI\AddEditButton.resx">
       <DependentUpon>AddEditButton.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\AddScreenForm.resx">
-      <DependentUpon>AddScreenForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\EditScreenForm.resx">
       <DependentUpon>EditScreenForm.cs</DependentUpon>

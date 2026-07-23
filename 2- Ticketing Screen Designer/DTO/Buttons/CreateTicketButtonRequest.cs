@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Ticketing_Screen_Designer.DTO.Buttons
+﻿namespace Ticketing_Screen_Designer.DTO.Buttons
 {
     public class CreateTicketButtonRequestDto : BaseButtonDto
     {
@@ -10,5 +8,13 @@ namespace Ticketing_Screen_Designer.DTO.Buttons
 
 
         public int ServiceId { get; set; }
+
+        public override string DisplayText
+        {
+            get
+            {
+                return base.DisplayText + $"Issue Ticket (pending)";
+            }
+        }
     }
 }
