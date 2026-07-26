@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Windows.Forms;
 using Ticketing_Screen_Designer.DTO.Buttons;
 using Ticketing_Screen_Designer.DTO.Screens;
 using Ticketing_Screen_Designer.Interfaces.Repositories;
@@ -316,7 +315,7 @@ namespace Ticketing_Screen_Designer.Services
 
 
 
-        public bool SaveScreenEdits(
+        public bool UpdateScreenAndButtons(
             BaseScreenRequestDto screenUpdate,
             IEnumerable<BaseButtonDto> pendingCreates,
             IEnumerable<UpdateButtonRequestDto> pendingUpdates,

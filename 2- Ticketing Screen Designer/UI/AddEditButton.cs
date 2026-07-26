@@ -419,6 +419,7 @@ namespace _2__Ticketing_Screen_Designer.UI
             var listOfPendingCreatedButtons = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
             var listDbButtons = _stateService.Get<List<BaseButtonResponseDto>>() ?? new List<BaseButtonResponseDto>();
             var pendingDeletes = _stateService.Get<List<int>>() ?? new List<int>();
+            var pendingUpdateIds = listOfPendingUpdatedButtons.Select(b => b.ButtonId).ToList();
 
             bool isDuplicateInCreated = listOfPendingCreatedButtons
                 .Select((b, idx) => new { Button = b, Index = idx })
@@ -426,10 +427,12 @@ namespace _2__Ticketing_Screen_Designer.UI
                           && x.Index != updatingNonDbIndex);
 
             bool isDuplicateInUpdated = listOfPendingUpdatedButtons
-                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR) && b.ButtonId != currentButtonId);
+                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR)
+                && b.ButtonId != currentButtonId);
 
             bool isDuplicateInDb = listDbButtons
-                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR) && b.ButtonId != currentButtonId && !pendingDeletes.Contains(b.ButtonId));
+                .Any(b => (b.ButtonNameEN == newButton.ButtonNameEN || b.ButtonNameAR == newButton.ButtonNameAR)
+                && b.ButtonId != currentButtonId && !pendingDeletes.Contains(b.ButtonId) && !pendingUpdateIds.Contains(b.ButtonId));
 
             if (isDuplicateInCreated || isDuplicateInUpdated || isDuplicateInDb)
             {

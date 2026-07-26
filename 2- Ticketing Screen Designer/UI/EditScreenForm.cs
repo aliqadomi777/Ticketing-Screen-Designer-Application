@@ -160,7 +160,7 @@ namespace _2__Ticketing_Screen_Designer.UI
                         return;
                     }
 
-                    if (hasScreenChanges)
+                    if (hasScreenChanges || hasButtonChanges)
                     {
                         validateScreen();
                         var updatedScreen = new BaseScreenRequestDto
