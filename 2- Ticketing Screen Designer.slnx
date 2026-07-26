@@ -1,3 +1,7 @@
 <Solution>
-  <Project Path="2- Ticketing Screen Designer/2- Ticketing Screen Designer.csproj" Id="80537f12-2a73-4b2a-b84e-a41aba1e334a" />
+  <Project Path="App.Application/App.Application.csproj" Id="3adcea51-6fa4-40c6-8aeb-fc6b92001f83" />
+  <Project Path="App.Domain/App.Domain.csproj" Id="6faf81b8-5ea0-42b8-8bfa-08aa297000ad" />
+  <Project Path="App.Infrastructure/App.Infrastructure.csproj" Id="f58ca737-186d-4590-a1f7-82ca5bc5b061" />
+  <Project Path="App.Shared/App.Shared.csproj" Id="1b692059-f3db-4a53-895a-31ce395a3bcb" />
+  <Project Path="App.WinForms/App.WinForms.csproj" Id="026b192e-da80-4aff-9474-3f64f6de3e86" />
 </Solution>
