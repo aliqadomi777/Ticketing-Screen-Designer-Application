@@ -9,8 +9,15 @@ namespace Ticketing_Screen_Designer.Interfaces.Services
 
         //Retrieve All screen for A bank -> ID
         List<ScreenResponseDto> GetAllScreensDetails(int id);
-        int AddScreen(CreateScreenRequestDto screenRequest);
+        int AddScreen(CreateScreenRequestDto request);
         bool UpdateScreen(BaseScreenRequestDto request);
         bool DeleteScreen(int id);
+
+        int CreateScreenWithButtons(CreateScreenRequestDto request,
+            IEnumerable<BaseButtonDto> requests);
+        bool UpdateScreenAndButtons(BaseScreenRequestDto screenUpdate,
+                            IEnumerable<BaseButtonDto> pendingCreates,
+                            IEnumerable<UpdateButtonRequestDto> pendingUpdates,
+                            IEnumerable<int> pendingDeletes);
     }
 }

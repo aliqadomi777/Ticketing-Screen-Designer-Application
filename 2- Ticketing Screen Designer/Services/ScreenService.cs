@@ -20,14 +20,17 @@ namespace Ticketing_Screen_Designer.Services
         private readonly IDeleteableRepository<ScreenModel> _deleteRepository;
         private readonly IListableRepository<ScreenModel> _listRepository;
 
+
         private readonly IAddButtonService _addButtonService;
+        private readonly IButtonService _buttonService;
         public ScreenService(
             IFetchableRepository<ScreenModel> fetchRepository,
             IAddableRepository<ScreenModel> addRepository,
             IUpdateableRepository<ScreenModel> updateRepository,
             IDeleteableRepository<ScreenModel> deleteRepository,
             IListableRepository<ScreenModel> listRepository,
-            IAddButtonService addButtonService)
+            IAddButtonService addButtonService,
+            IButtonService buttonService)
         {
             _fetchRepository = fetchRepository;
             _addRepository = addRepository;
@@ -35,6 +38,7 @@ namespace Ticketing_Screen_Designer.Services
             _deleteRepository = deleteRepository;
             _listRepository = listRepository;
             _addButtonService = addButtonService;
+            _buttonService = buttonService;
         }
         public ScreenResponseDto GetScreenDetails(int screenId)
         {
@@ -246,6 +250,141 @@ namespace Ticketing_Screen_Designer.Services
                     ex);
             }
 
+        }
+        public int CreateScreenWithButtons(CreateScreenRequestDto screenRequest,
+                                           IEnumerable<BaseButtonDto> buttonRequests)
+        {
+            using (var scope = new System.Transactions.TransactionScope(
+                System.Transactions.TransactionScopeOption.Required,
+                new System.Transactions.TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    int newScreenId = _addRepository.Add(new ScreenModel
+                    {
+                        ScreenName = screenRequest.ScreenName,
+                        BankId = screenRequest.BankId,
+                        IsActive = screenRequest.IsActive
+                    });
+
+                    foreach (var button in buttonRequests)
+                    {
+                        button.ScreenId = newScreenId;
+                    }
+                    _addButtonService.AddButtons(buttonRequests);
+
+                    scope.Complete();
+                    return newScreenId;
+                }
+                catch (DuplicateRecordException)
+                {
+                    throw;
+                }
+
+                catch (ParentDeletedWithChildConflictException)
+                {
+                    throw;
+                }
+                catch (ExcessiveScreenActivationException)
+                {
+                    throw;
+                }
+                catch (SqlException ex)
+                {
+                    Log.Error(ex,
+                              "SQL error {SqlErrorNumber} while creating Screen '{ScreenName} with buttons'.",
+                              ex.Number,
+                              screenRequest.ScreenName);
+
+                    throw new DataAccessException(
+                        "A database error occurred while creating the screen with buttons.",
+                        ex);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex,
+                        "Unexpected error while creating screen '{ScreenName} with buttons'.",
+                        screenRequest.ScreenName);
+
+                    throw new DataAccessException(
+                        "An unexpected error occurred while creating the Screen with buttons.",
+                        ex);
+                }
+
+            }
+        }
+
+
+
+        public bool SaveScreenEdits(
+            BaseScreenRequestDto screenUpdate,
+            IEnumerable<BaseButtonDto> pendingCreates,
+            IEnumerable<UpdateButtonRequestDto> pendingUpdates,
+            IEnumerable<int> pendingDeletes)
+        {
+            using (var scope = new System.Transactions.TransactionScope(
+                System.Transactions.TransactionScopeOption.Required,
+                new System.Transactions.TransactionOptions { IsolationLevel = System.Transactions.IsolationLevel.ReadCommitted }))
+            {
+                try
+                {
+                    if (screenUpdate != null)
+                    {
+                        _updateRepository.Update(new ScreenModel
+                        {
+                            ScreenId = screenUpdate.screenId,
+                            ScreenName = screenUpdate.ScreenName,
+                            IsActive = screenUpdate.IsActive
+                        });
+                    }
+
+                    if (pendingDeletes.Any())
+                    {
+                        _buttonService.DeleteButtons(pendingDeletes);
+                    }
+                    if (pendingCreates.Any())
+                    {
+                        _addButtonService.AddButtons(pendingCreates);
+
+                    }
+                    if (pendingUpdates.Any())
+                    {
+                        _buttonService.UpdateButtons(pendingUpdates);
+                    }
+
+                    scope.Complete();
+                    return true;
+                }
+                catch (DuplicateRecordException)
+                {
+                    throw;
+                }
+                catch (ExcessiveScreenActivationException)
+                {
+                    throw;
+                }
+                catch (SqlException ex)
+                {
+                    Log.Error(ex,
+                              "SQL error {SqlErrorNumber} while updating Screen '{ScreenName}'.",
+                              ex.Number,
+                              screenUpdate.ScreenName);
+
+                    throw new DataAccessException(
+                        "A database error occurred while updating the screen.",
+                        ex);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex,
+                        "Unexpected error while updating screen '{ScreenName}'.",
+                        screenUpdate.ScreenName);
+
+                    throw new DataAccessException(
+                        "An unexpected error occurred while updating the ScreenName.",
+                        ex);
+                }
+            }
         }
     }
 }

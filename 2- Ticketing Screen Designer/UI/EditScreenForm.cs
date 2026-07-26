@@ -107,26 +107,25 @@ namespace _2__Ticketing_Screen_Designer.UI
                 try
                 {
                     validateScreen();
-                    var newScreenId = _screenService.AddScreen(new CreateScreenRequestDto
+                    var newScreen = new CreateScreenRequestDto
                     {
                         ScreenName = currentName,
                         IsActive = isActivatedCurrent,
                         BankId = bankSession.BankId
-                    });
-
+                    };
+                    //Change into a one scope of transaction -> if buttons adding fails -> screen not commited
+                    var newScreenId = _screenService.CreateScreenWithButtons(newScreen, pendingCreates);
                     if (newScreenId > 0)
                     {
-                        var newScreen = _screenService.GetScreenDetails(newScreenId);
-                        _stateService.Set(newScreen);
-                        foreach (var button in pendingCreates)
-                        {
-                            button.ScreenId = newScreenId;
-                        }
-                        _addButtonService.AddButtons(pendingCreates);
                         ClearSessionCache();
                         MessageBox.Show($"Screen and buttons created successfully!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         _isNavigatingBack = true;
                         this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Screen and buttons could not be created.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                     }
                 }
                 catch (ValidationException ex)
@@ -164,40 +163,32 @@ namespace _2__Ticketing_Screen_Designer.UI
                     if (hasScreenChanges)
                     {
                         validateScreen();
-                        bool isUpdated = _screenService.UpdateScreen(new BaseScreenRequestDto
+                        var updatedScreen = new BaseScreenRequestDto
                         {
                             screenId = screenDetails.ScreenId,
                             ScreenName = currentName,
                             IsActive = isActivatedCurrent,
-                        });
-
+                        };
+                        bool isUpdated = _screenService.UpdateScreenAndButtons(updatedScreen,
+                            pendingCreates, pendingUpdates, pendingDeletes);
                         if (isUpdated)
                         {
-                            var updatedScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
-                            _stateService.Set(updatedScreen);
+                            ClearSessionCache();
+                            MessageBox.Show($"All changes updated correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            _isNavigatingBack = true;
+                            this.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Screen and buttons could not be updated.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                         }
                     }
-                    if (pendingDeletes.Count > 0)
-                    {
-                        _buttonService.DeleteButtons(pendingDeletes);
-                    }
-
-                    if (pendingUpdates.Count > 0)
-                    {
-                        _buttonService.UpdateButtons(pendingUpdates);
-                    }
-                    if (pendingCreates.Count > 0)
-                    {
-                        _addButtonService.AddButtons(pendingCreates);
-                    }
 
 
 
-                    ClearSessionCache();
-                    MessageBox.Show($"All changes updated correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    _isNavigatingBack = true;
-                    this.Close();
                 }
                 catch (ValidationException ex)
                 {
@@ -207,9 +198,9 @@ namespace _2__Ticketing_Screen_Designer.UI
                 {
                     MessageBox.Show("A screen is already active", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
-                catch (DuplicateRecordException)
+                catch (DuplicateRecordException ex)
                 {
-                    MessageBox.Show("A screen with the same name already exists", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 catch (Exception)
                 {
