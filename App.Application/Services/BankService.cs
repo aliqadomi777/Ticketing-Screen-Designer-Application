@@ -3,7 +3,7 @@ using App.Application.Interfaces;
 using App.Domain.Interfaces;
 using App.Domain.Models;
 using App.Shared;
-using Serilog;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Data.SqlClient;
 namespace App.Application.Services
@@ -12,10 +12,15 @@ namespace App.Application.Services
     {
         private readonly IFetchableRepository<BankModel> _fetchRepository;
         private readonly IAddableRepository<BankModel> _addRepository;
-        public BankService(IFetchableRepository<BankModel> fetchRepository, IAddableRepository<BankModel> addRepository)
+        private readonly ILogger<BankModel> _logger;
+
+        public BankService(IFetchableRepository<BankModel> fetchRepository,
+            IAddableRepository<BankModel> addRepository, ILogger<BankModel> logger
+)
         {
             _fetchRepository = fetchRepository;
             _addRepository = addRepository;
+            _logger = logger;
         }
         public int CreateBank(CreateBankRequestDto request)
         {
@@ -36,24 +41,20 @@ namespace App.Application.Services
 
             catch (SqlException ex)
             {
-                Log.Error(ex,
-                          "SQL error {SqlErrorNumber} while creating bank '{BankName}'.",
+                _logger.LogError(ex,
+                          ex.Message,
                           ex.Number,
                           request.BankName);
 
-                throw new DataAccessException(
-                    "A database error occurred while creating the bank.",
-                    ex);
+                throw;
             }
             catch (Exception ex)
             {
-                Log.Error(ex,
-                    "Unexpected error while creating bank '{BankName}'.",
+                _logger.LogError(ex,
+                    ex.Message,
                     request.BankName);
+                throw;
 
-                throw new DataAccessException(
-                    "An unexpected error occurred while creating the bank.",
-                    ex);
             }
         }
         public BankResponseDto GetBankDetails(int bankId)
@@ -81,26 +82,24 @@ namespace App.Application.Services
             }
             catch (SqlException ex)
             {
-                Log.Error(ex,
-                          "SQL error {SqlErrorNumber} while retrieving bank with ID: '{bankId}'.",
+                _logger.LogError(ex,
+                          ex.Message,
                           ex.Number,
                           bankId);
 
-                throw new DataAccessException(
-                    "A database error occurred while retrieving bank info",
-                    ex);
+                throw;
+
             }
 
 
             catch (Exception ex)
             {
-                Log.Error(ex,
-                    "Failed business operation 'GetBankDetails' for BankId {BankId}.",
+                _logger.LogError(ex,
+                    ex.Message,
                     bankId);
 
-                throw new DataAccessException(
-                    $"Could not retrieve bank {bankId}.",
-                    ex);
+                throw;
+
             }
         }
     }

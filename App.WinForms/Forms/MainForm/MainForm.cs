@@ -14,10 +14,11 @@ namespace App.WinForms
         private readonly IServiceProvider _serviceProvider;
         private readonly IUiStateService _stateService;
 
-
+        private Timer _periodicTimer;
         public MainForm(IScreenService screenService, IServiceProvider serviceProvider, IUiStateService stateService)
         {
             InitializeComponent();
+            InitializePeriodicTimer();
             _screenService = screenService;
             _serviceProvider = serviceProvider;
             _stateService = stateService;
@@ -31,7 +32,20 @@ namespace App.WinForms
             DeleteScreenButton.BackColor = ColorTranslator.FromHtml("#D83B01");
         }
 
+        private void InitializePeriodicTimer()
+        {
+            _periodicTimer = new Timer();
+            //5 mins 
+            _periodicTimer.Interval = 1000 * 60 * 5;
 
+            _periodicTimer.Tick += PeriodicTimer_Exec;
+
+            _periodicTimer.Start();
+        }
+        private void PeriodicTimer_Exec(object sender, EventArgs e)
+        {
+            refreshList();
+        }
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             System.Windows.Forms.Application.Exit();
@@ -50,6 +64,7 @@ namespace App.WinForms
             int startingLeft = (formWidth - titleWidth) / 2;
             ScreenTitleLabel.Left = startingLeft;
         }
+        //Optimize solution -> usage of modified date
         public void refreshList()
         {
             screenList.Items.Clear();
@@ -88,16 +103,12 @@ namespace App.WinForms
                 {
                     try
                     {
-                        if (_screenService.DeleteScreen(screenIdToDelete))
-                        {
-                            MessageBox.Show($"Screen : {screenName} has been successfully deleted", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-
-                        }
-                        else
+                        if (!_screenService.DeleteScreen(screenIdToDelete))
                         {
                             MessageBox.Show($"Screen is already deleted", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                         }
+
                         screenList.Items.Remove(selectedScreen);
                         screenList.ClearSelected();
                     }
@@ -128,8 +139,8 @@ namespace App.WinForms
                     {
                         _stateService.Set(screen);
                         var editScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
+                        FormUtils.CenterToForm(this, editScreen);
                         editScreen.Show();
-                        this.Hide();
                     }
 
                     else
@@ -156,16 +167,18 @@ namespace App.WinForms
 
         private void AddScreenButton_Click(object sender, EventArgs e)
         {
-            //var addScreen = _serviceProvider.GetRequiredService<AddScreenForm>();
-            //addScreen.Show();
-            //this.Hide();
             _stateService.Clear<BaseScreenRequestDto>();
             _stateService.Clear<CreateScreenRequestDto>();
 
             var addScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
+            FormUtils.CenterToForm(this, addScreen);
             addScreen.Show();
-            this.Hide();
+        }
 
+
+        private void RefreshButton_Click(object sender, EventArgs e)
+        {
+            refreshList();
         }
     }
 }

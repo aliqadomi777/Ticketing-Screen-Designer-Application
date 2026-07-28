@@ -22,7 +22,8 @@ namespace App.WinForms
         private readonly IUiStateService _stateService;
         private readonly IButtonService _buttonService;
         private bool _isNavigatingBack = false;
-
+        private bool _isCoreScreenChanged = false;
+        private DateTimeOffset _fetchTime;
 
 
         public EditScreenForm(IScreenService screenService,
@@ -72,6 +73,7 @@ namespace App.WinForms
             var pendingDeletes = _stateService.Get<List<int>>() ?? new List<int>();
             var pendingUpdates = _stateService.Get<List<UpdateButtonRequestDto>>() ?? new List<UpdateButtonRequestDto>();
             var pendingCreates = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
+            var cachedDbButtons = _stateService.Get<List<BaseButtonResponseDto>>();
             int finalButtonCount = 0;
 
             if (screenDetails == null)
@@ -82,7 +84,64 @@ namespace App.WinForms
             {
                 try
                 {
-                    var databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId) ?? new List<BaseButtonResponseDto>();
+                    var databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                    var latestScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
+                    if (latestScreen == null)
+                    {
+                        MessageBox.Show("This Screen has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        this.Close();
+                        return;
+                    }
+                    if (latestScreen.ModifiedAt > _fetchTime)
+                    {
+                        _fetchTime = latestScreen.ModifiedAt;
+                        _isCoreScreenChanged = ScreenNameTextBox.Text != latestScreen.ScreenName
+                           || ActivateButton.Checked != latestScreen.IsActive;
+
+                        // Check if any button we want to update is missing from the database
+                        bool hasMissingUpdates = pendingUpdates.Any(p => !databaseButtons.Any(db => db.ButtonId == p.ButtonId));
+
+                        // Check if any button we want to delete still exists in the database
+                        bool hasDeletesToProcess = pendingDeletes.Any(p => databaseButtons.Any(db => db.ButtonId == p));
+
+                        // Check if any buttons newly added to db that is not ye loaded into Current instance
+                        bool hasNewDbButtons = databaseButtons.Any(db => !cachedDbButtons.Any(c => c.ButtonId == db.ButtonId));
+
+                        screenDetails.ScreenName = latestScreen.ScreenName;
+                        screenDetails.IsActive = latestScreen.IsActive;
+
+                        if (hasMissingUpdates || hasDeletesToProcess || _isCoreScreenChanged || hasNewDbButtons)
+                        {
+                            DialogResult syncOrCancel = MessageBox.Show(
+                                            "Current Info are outdated press Ok to Sync Screen's Info or Cancel to Exit", "Warning",
+                                            MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                            if (syncOrCancel == DialogResult.OK)
+                            {
+                                _fetchTime = latestScreen.ModifiedAt;
+                                //preserveScreen();
+                                refreshList();
+                                //IF we want to sync the name and status of screen
+                                ScreenNameTextBox.Text = latestScreen.ScreenName;
+                                ActivateButton.Checked = latestScreen.IsActive;
+                                DeactivateButton.Checked = !latestScreen.IsActive;
+
+                                return;
+                            }
+                            else if (syncOrCancel == DialogResult.Cancel)
+                            {
+                                ClearSessionCache();
+                                _isNavigatingBack = true;
+                                this.Close();
+                            }
+                        }
+
+                    }
+                    //var databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                    //if (databaseButtons.Count() == 0)
+                    //{
+                    //    MessageBox.Show("This Screen has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //    return;
+                    //}
                     int remainingDbButtonsCount = databaseButtons.Count(btn => !pendingDeletes.Contains(btn.ButtonId));
                     finalButtonCount = remainingDbButtonsCount + pendingCreates.Count;
                 }
@@ -158,8 +217,9 @@ namespace App.WinForms
                         return;
                     }
 
-                    if (hasScreenChanges || hasButtonChanges)
+                    if (hasScreenChanges || hasButtonChanges || _isCoreScreenChanged)
                     {
+                        _isCoreScreenChanged = false;
                         validateScreen();
                         var updatedScreen = new BaseScreenRequestDto
                         {
@@ -200,6 +260,12 @@ namespace App.WinForms
                 {
                     MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
+
+                catch (ParentDeletedWithChildConflictException ex)
+                {
+                    MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                }
                 catch (Exception)
                 {
                     MessageBox.Show("A problem occurred while updating screen and buttons", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -218,12 +284,7 @@ namespace App.WinForms
         }
 
 
-        private void CancelButton_Click(object sender, EventArgs e)
-        {
-            _isNavigatingBack = true;
-            ClearSessionCache();
-            this.Close();
-        }
+
 
         private void preserveScreen()
         {
@@ -267,7 +328,9 @@ namespace App.WinForms
                 _stateService.Clear<UpdateButtonRequestDto>();
                 _stateService.Clear<BaseButtonDto>();
                 var editButtonForm = _serviceProvider.GetRequiredService<AddEditButton>();
-                editButtonForm.ShowDialog();
+                FormUtils.CenterToForm(this, editButtonForm);
+
+                editButtonForm.Show();
 
             }
 
@@ -346,8 +409,10 @@ namespace App.WinForms
                 {
                     preserveScreen();
                     var editButtonForm = _serviceProvider.GetRequiredService<AddEditButton>();
-                    editButtonForm.ShowDialog();
-                    refreshList();
+                    FormUtils.CenterToForm(this, editButtonForm);
+
+                    editButtonForm.Show();
+                    //refreshList();
                 }
                 catch (ValidationException ex)
                 {
@@ -443,11 +508,13 @@ namespace App.WinForms
         private void EditScreenForm_Load(object sender, EventArgs e)
         {
             DeactivateButton.Checked = true;
+            _fetchTime = DateTimeOffset.UtcNow;
             refreshList();
         }
 
 
         //unifiedButtons -> Holds all buttons -> for listing and selecting 
+
         public void refreshList()
         {
             _stateService.Clear<List<BaseButtonResponseDto>>();
@@ -462,10 +529,13 @@ namespace App.WinForms
             var pendingDeletes = _stateService.Get<List<int>>() ?? new List<int>();
 
             var unifiedButtons = new Dictionary<string, object>();
+            List<BaseButtonResponseDto> databaseButtons = new List<BaseButtonResponseDto>();
+
             this.Text = "Edit Screen";
             if (screenDetails == null)
             {
                 this.Text = "Add Screen";
+                RefreshButton.Hide();
             }
             if (screenDetails != null)
             {
@@ -476,7 +546,7 @@ namespace App.WinForms
                 try
                 {
 
-                    var databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                    databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
                     _stateService.Set(databaseButtons);
                     foreach (var btn in databaseButtons)
                     {
@@ -503,6 +573,11 @@ namespace App.WinForms
                 ActivateButton.Checked = pendingUpdateScreen.IsActive;
                 DeactivateButton.Checked = !pendingUpdateScreen.IsActive;
             }
+            //Delete cached pending updates -> deleted by other instance
+
+            pendingButtonsUpdate.RemoveAll(b => !databaseButtons.Any(o => o.ButtonId == b.ButtonId));
+
+
             foreach (var updateBtn in pendingButtonsUpdate)
             {
                 if (!pendingDeletes.Contains(updateBtn.ButtonId))
@@ -525,23 +600,52 @@ namespace App.WinForms
             }
         }
 
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            _isNavigatingBack = true;
+            this.Close();
+        }
 
         private void EditScreenForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (_isNavigatingBack && System.Windows.Forms.Application.OpenForms["MainForm"] is MainForm mainForm)
+            if (_isNavigatingBack)
             {
                 ClearSessionCache();
-                mainForm.refreshList();
-                mainForm.Show();
+
+                if (System.Windows.Forms.Application.OpenForms["MainForm"] is MainForm mainForm)
+                {
+                    mainForm.refreshList();
+                    mainForm.Show();
+                }
+
+                return;
             }
-            else if (!_isNavigatingBack && e.CloseReason == CloseReason.UserClosing)
+
+
+            else
             {
-
-                Environment.Exit(0);
-
+                System.Windows.Forms.Application.Exit();
             }
         }
 
+
+
+
+        private void EditScreenForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                _isNavigatingBack = true;
+            }
+
+        }
+        //Refreshing prdouces no problems -> we preserve all needed states of data
+        private void RefreshButton_Click(object sender, EventArgs e)
+        {
+            preserveScreen();
+            refreshList();
+        }
 
     }
 }

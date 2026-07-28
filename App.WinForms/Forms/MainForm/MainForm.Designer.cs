@@ -34,6 +34,7 @@
             this.EditScreenButton = new System.Windows.Forms.Button();
             this.screenList = new System.Windows.Forms.ListBox();
             this.ScreenTitleLabel = new System.Windows.Forms.Label();
+            this.RefreshButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TitleLabel
@@ -103,10 +104,22 @@
             this.ScreenTitleLabel.TabIndex = 5;
             this.ScreenTitleLabel.Text = "Screens";
             // 
+            // RefreshButton
+            // 
+            this.RefreshButton.Location = new System.Drawing.Point(755, 148);
+            this.RefreshButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.RefreshButton.Name = "RefreshButton";
+            this.RefreshButton.Size = new System.Drawing.Size(152, 49);
+            this.RefreshButton.TabIndex = 6;
+            this.RefreshButton.Text = "Refresh";
+            this.RefreshButton.UseVisualStyleBackColor = true;
+            this.RefreshButton.Click += new System.EventHandler(this.RefreshButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(920, 675);
+            this.Controls.Add(this.RefreshButton);
             this.Controls.Add(this.ScreenTitleLabel);
             this.Controls.Add(this.screenList);
             this.Controls.Add(this.EditScreenButton);
@@ -116,8 +129,9 @@
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(6);
+            this.MaximizeBox = false;
             this.Name = "MainForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Screen Management";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -135,5 +149,6 @@
         private System.Windows.Forms.Button EditScreenButton;
         private System.Windows.Forms.ListBox screenList;
         private System.Windows.Forms.Label ScreenTitleLabel;
+        private System.Windows.Forms.Button RefreshButton;
     }
 }

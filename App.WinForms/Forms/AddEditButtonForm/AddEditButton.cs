@@ -188,13 +188,7 @@ namespace App.WinForms
 
 
 
-        private void CancelButton_Click(object sender, EventArgs e)
-        {
 
-
-            _isNavigatingBack = true;
-            this.Close();
-        }
         private void SaveButton_Click(object sender, EventArgs e)
         {
 
@@ -437,28 +431,50 @@ namespace App.WinForms
             return false;
         }
 
-
-        private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            _stateService.Clear<BaseButtonResponseDto>();
-            if (_isNavigatingBack && System.Windows.Forms.Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
-            {
-                editScreenForm.refreshList();
-                editScreenForm.Show();
-            }
-            else if (!_isNavigatingBack && e.CloseReason == CloseReason.UserClosing)
-            {
-                Environment.Exit(0);
-            }
-        }
-
-
         //changes shown data dynamically based on button action  
         private void ButtonActionList_SelectedIndexChanged(object sender, EventArgs e)
         {
             showHideDetail();
         }
 
+        private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            _stateService.Clear<BaseButtonResponseDto>();
 
+            if (_isNavigatingBack)
+            {
+
+                if (System.Windows.Forms.Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
+                {
+                    editScreenForm.refreshList();
+                    editScreenForm.Show();
+                }
+                return;
+            }
+
+
+            else if (!_isNavigatingBack)
+            {
+                System.Windows.Forms.Application.Exit();
+            }
+        }
+
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            _stateService.Clear<BaseButtonResponseDto>();
+            _stateService.Clear<BaseButtonDto>();
+            _stateService.Clear<UpdateButtonRequestDto>();
+
+            _isNavigatingBack = true;
+            this.Close();
+        }
+
+        private void AddEditButton_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                _isNavigatingBack = true;
+            }
+        }
     }
 }

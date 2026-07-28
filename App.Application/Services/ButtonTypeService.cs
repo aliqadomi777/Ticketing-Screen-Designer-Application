@@ -42,8 +42,8 @@ namespace App.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed executing query for button type with ID: {typeId}", typeId);
-                throw new DataAccessException($"Could not retrieve profile records for Type ID {typeId}.", ex);
+                _logger.LogError(ex, ex.Message, typeId);
+                throw;
             }
         }
 
@@ -60,8 +60,8 @@ namespace App.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed executing query retrieving all button types: {bankId}");
-                throw new DataAccessException("Could not retrieve All button types", ex);
+                _logger.LogError(ex, ex.Message);
+                throw;
             }
 
 

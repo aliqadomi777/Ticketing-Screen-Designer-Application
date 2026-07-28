@@ -1,5 +1,6 @@
 ﻿using App.Domain.Interfaces;
 using App.Domain.Models;
+using App.Infrastructure.Exceptions;
 using App.Shared;
 using System;
 using System.Collections.Generic;
@@ -172,14 +173,14 @@ namespace App.Infrastructure.Repositories
 
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueConstraintViolation)
             {
                 throw new DuplicateRecordException($"A button with this English or Arabic name already exists\n" +
                     $"EN: {buttonModel.ButtonNameEN} | AR: {buttonModel.ButtonNameAR}", ex);
 
             }
 
-            catch (SqlException ex) when (ex.Number == 547)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.ForeignKeyViolation)
             {
                 throw new ParentDeletedWithChildConflictException(
                     $"The Screen your adding Button to has been deleted",
@@ -208,11 +209,10 @@ namespace App.Infrastructure.Repositories
                     return rowsAffected > 0;
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueConstraintViolation)
             {
                 throw new DuplicateRecordException($"A button with this English or Arabic name already exists\n" +
                     $"EN: {buttonModel.ButtonNameEN} | AR: {buttonModel.ButtonNameAR}", ex);
-
 
             }
 

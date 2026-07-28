@@ -3,6 +3,7 @@ using App.Application.Interfaces;
 using App.Shared;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
 namespace App.WinForms
@@ -10,6 +11,8 @@ namespace App.WinForms
     public partial class RegisterForm : Form
     {
         private readonly IBankService _bankService;
+        private bool _isNavigatingBack = true;
+
         public RegisterForm(IBankService bankService)
         {
             InitializeComponent();
@@ -21,6 +24,7 @@ namespace App.WinForms
             RegisterButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
 
             CancelButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
+
         }
 
 
@@ -37,7 +41,11 @@ namespace App.WinForms
                     BankName = newBankName.Trim()
                 });
 
-                MessageBox.Show($"the new bank ID is {newBankId}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DialogResult confirm = MessageBox.Show($"the new bank ID is {newBankId}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (confirm == DialogResult.OK)
+                {
+                    button2_Click(this, EventArgs.Empty);
+                }
             }
             catch (DuplicateRecordException ex)
             {
@@ -47,6 +55,12 @@ namespace App.WinForms
             catch (ValidationException ex)
             {
                 MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            //18456 -> wrong password or user / 4060 wrong db name / 11001 -> wrong server  -> change to enums
+            catch (SqlException ex) when (ex.Number == 18456 || ex.Number == 4060 || ex.Number == 11001)
+            {
+                MessageBox.Show("Unable to connect to the database. Please verify your network connection, server details, and credentials."
+                    , "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception)
             {
@@ -61,13 +75,35 @@ namespace App.WinForms
             this.Close();
         }
 
-        private void RegisterForm_FormClosed(object sender, FormClosedEventArgs e)
+        private void RegisterForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (System.Windows.Forms.Application.OpenForms["LoginForm"] is LoginForm loginForm)
+            if (e.CloseReason == CloseReason.UserClosing)
             {
-                loginForm.Show();
+                _isNavigatingBack = true;
             }
         }
+
+        private void RegisterForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+
+
+            if (_isNavigatingBack)
+            {
+
+                if (System.Windows.Forms.Application.OpenForms["LoginForm"] is LoginForm loginForm)
+                {
+                    loginForm.Show();
+                }
+                return;
+            }
+
+
+            else if (!_isNavigatingBack)
+            {
+                System.Windows.Forms.Application.Exit();
+            }
+        }
+
 
         private void label1_Click(object sender, EventArgs e)
         {

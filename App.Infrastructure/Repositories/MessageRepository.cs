@@ -1,5 +1,6 @@
 ﻿using App.Domain.Interfaces;
 using App.Domain.Models;
+using App.Infrastructure.Exceptions;
 using App.Shared;
 using System;
 using System.Data;
@@ -35,14 +36,14 @@ namespace App.Infrastructure.Repositories
 
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueConstraintViolation)
             {
                 throw new DuplicateRecordException(
                     $"A Message Already exists for this button",
                     ex);
             }
 
-            catch (SqlException ex) when (ex.Number == 547)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.ForeignKeyViolation)
             {
                 throw new DuplicateRecordException(
                     $"The Button your adding Message to has been deleted",

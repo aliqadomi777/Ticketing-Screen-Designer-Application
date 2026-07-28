@@ -40,6 +40,7 @@
             this.AddButton = new System.Windows.Forms.Button();
             this.SaveButton = new System.Windows.Forms.Button();
             this.CancelButton = new System.Windows.Forms.Button();
+            this.RefreshButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // ScreenNameLabel
@@ -160,10 +161,22 @@
             this.CancelButton.UseVisualStyleBackColor = true;
             this.CancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
+            // RefreshButton
+            // 
+            this.RefreshButton.Location = new System.Drawing.Point(757, 177);
+            this.RefreshButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.RefreshButton.Name = "RefreshButton";
+            this.RefreshButton.Size = new System.Drawing.Size(154, 53);
+            this.RefreshButton.TabIndex = 14;
+            this.RefreshButton.Text = "Refresh";
+            this.RefreshButton.UseVisualStyleBackColor = true;
+            this.RefreshButton.Click += new System.EventHandler(this.RefreshButton_Click);
+            // 
             // EditScreenForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(924, 717);
+            this.Controls.Add(this.RefreshButton);
             this.Controls.Add(this.SaveButton);
             this.Controls.Add(this.CancelButton);
             this.Controls.Add(this.EditButton);
@@ -179,9 +192,11 @@
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.MaximizeBox = false;
             this.Name = "EditScreenForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "AddEditScreen";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.EditScreenForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.EditScreenForm_FormClosed);
             this.Load += new System.EventHandler(this.EditScreenForm_Load);
             this.ResumeLayout(false);
@@ -203,5 +218,6 @@
         private System.Windows.Forms.Button AddButton;
         private System.Windows.Forms.Button SaveButton;
         private System.Windows.Forms.Button CancelButton;
+        private System.Windows.Forms.Button RefreshButton;
     }
 }

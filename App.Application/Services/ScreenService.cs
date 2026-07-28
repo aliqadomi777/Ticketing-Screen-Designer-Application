@@ -65,25 +65,22 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while retrieving screen with ID: '{screenId}'.",
+                          ex.Message,
                           ex.Number,
                           screenId);
+                throw;
 
-                throw new DataAccessException(
-                    "A database error occurred while retrieving screen info",
-                    ex);
             }
 
 
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed business operation 'GetScreenDetails' for screen {screenId}.",
+                    ex.Message,
                     screenId);
 
-                throw new DataAccessException(
-                    $"Could not retrieve screen {screenId}.",
-                    ex);
+                throw;
+
             }
 
         }
@@ -108,25 +105,21 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while retrieving screens for bank with ID: '{bankId}'.",
+                          ex.Message,
                           ex.Number,
                           bankId);
+                throw;
 
-                throw new DataAccessException(
-                    "A database error occurred while retrieving all screens for the bank",
-                    ex);
             }
 
 
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed business operation 'GetAllScreensDetails' for bank {bankId}.",
+                    ex.Message,
                     bankId);
+                throw;
 
-                throw new DataAccessException(
-                    $"Could not retrieve screens with bank ID: {bankId}.",
-                    ex);
             }
         }
         public int AddScreen(CreateScreenRequestDto screenRequest)
@@ -161,23 +154,21 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while creating Screen '{ScreenName}'.",
+                          ex.Message,
                           ex.Number,
                           screenRequest.ScreenName);
 
-                throw new DataAccessException(
-                    "A database error occurred while creating the screen.",
-                    ex);
+                throw;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Unexpected error while creating screen '{ScreenName}'.",
+                    ex.Message,
                     screenRequest.ScreenName);
 
-                throw new DataAccessException(
-                    "An unexpected error occurred while creating the Screen.",
-                    ex);
+                throw;
+
             }
         }
         public bool UpdateScreen(BaseScreenRequestDto request)
@@ -205,23 +196,21 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while updating Screen '{ScreenName}'.",
+                          ex.Message,
                           ex.Number,
                           request.ScreenName);
 
-                throw new DataAccessException(
-                    "A database error occurred while updating the screen.",
-                    ex);
+                throw;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Unexpected error while updating screen '{ScreenName}'.",
+                    ex.Message,
                     request.ScreenName);
 
-                throw new DataAccessException(
-                    "An unexpected error occurred while updating the ScreenName.",
-                    ex);
+                throw;
+
             }
 
         }
@@ -235,23 +224,21 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while deleting Screen with ID: '{screenId}'.",
+                          ex.Message,
                           ex.Number,
                           screenId);
 
-                throw new DataAccessException(
-                    "A database error occurred while deleting the screen.",
-                    ex);
+                throw;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Unexpected error while deleting screen with ID: '{screenId}'.",
+                    ex.Message,
                     screenId);
 
-                throw new DataAccessException(
-                    "An unexpected error occurred while deleting the Screen.",
-                    ex);
+                throw;
+
             }
 
         }
@@ -296,23 +283,20 @@ namespace App.Application.Services
                 catch (SqlException ex)
                 {
                     _logger.LogError(ex,
-                              "SQL error {SqlErrorNumber} while creating Screen '{ScreenName} with buttons'.",
+                              ex.Message,
                               ex.Number,
                               screenRequest.ScreenName);
+                    throw;
 
-                    throw new DataAccessException(
-                        "A database error occurred while creating the screen with buttons.",
-                        ex);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex,
-                        "Unexpected error while creating screen '{ScreenName} with buttons'.",
+                        ex.Message,
                         screenRequest.ScreenName);
 
-                    throw new DataAccessException(
-                        "An unexpected error occurred while creating the Screen with buttons.",
-                        ex);
+                    throw;
+
                 }
 
             }
@@ -360,6 +344,10 @@ namespace App.Application.Services
                     scope.Complete();
                     return true;
                 }
+                catch (ParentDeletedWithChildConflictException)
+                {
+                    throw;
+                }
                 catch (DuplicateRecordException)
                 {
                     throw;
@@ -371,23 +359,20 @@ namespace App.Application.Services
                 catch (SqlException ex)
                 {
                     _logger.LogError(ex,
-                              "SQL error {SqlErrorNumber} while updating Screen '{ScreenName}'.",
+                              ex.Message,
                               ex.Number,
                               screenUpdate.ScreenName);
 
-                    throw new DataAccessException(
-                        "A database error occurred while updating the screen.",
-                        ex);
+                    throw;
+
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex,
-                        "Unexpected error while updating screen '{ScreenName}'.",
+                        ex.Message,
                         screenUpdate.ScreenName);
+                    throw;
 
-                    throw new DataAccessException(
-                        "An unexpected error occurred while updating the ScreenName.",
-                        ex);
                 }
             }
         }

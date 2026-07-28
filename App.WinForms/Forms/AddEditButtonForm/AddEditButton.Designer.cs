@@ -202,9 +202,11 @@
             this.Controls.Add(this.ButtonNameEnLabel);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.Name = "AddEditButton";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "AddEditButton";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddEditButton_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.AddEditButton_FormClosed);
             this.Load += new System.EventHandler(this.AddEditButton_Load);
             this.buttonDetailsLayout.ResumeLayout(false);

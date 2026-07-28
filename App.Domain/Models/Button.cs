@@ -8,7 +8,7 @@ namespace App.Domain.Models
         public string ButtonNameAR { get; set; }
         public int ButtonType { get; set; }
         public int ScreenId { get; set; }
-        public DateTimeOffset ModifiedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset ModifiedAt { get; set; }
         public string TypeName { get; set; }
     }
 

@@ -117,25 +117,23 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while retrieving button with ID: '{buttonId}'.",
+                          ex.Message,
                           ex.Number,
                           buttonId);
 
-                throw new DataAccessException(
-                    "A database error occurred while retrieving bank info",
-                    ex);
+                throw;
+
             }
 
 
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed business operation 'GetButtonDetails' for buttonId {buttonId}.",
+                    ex.Message,
                     buttonId);
 
-                throw new DataAccessException(
-                    $"Could not retrieve button {buttonId}.",
-                    ex);
+                throw;
+
             }
         }
         public List<BaseButtonResponseDto> GetAllButtonsDetails(int screenId)
@@ -157,25 +155,23 @@ namespace App.Application.Services
             catch (SqlException ex)
             {
                 _logger.LogError(ex,
-                          "SQL error {SqlErrorNumber} while retrieving buttons for screen with ID: '{screenId}'.",
+                          ex.Message,
                           ex.Number,
                           screenId);
 
-                throw new DataAccessException(
-                    "A database error occurred while retrieving all button for the screen",
-                    ex);
+                throw;
+
             }
 
 
             catch (Exception ex)
             {
                 _logger.LogError(ex,
-                    "Failed business operation 'GetAllButtonsDetails' for screen {screenId}.",
+                    ex.Message,
                     screenId);
 
-                throw new DataAccessException(
-                    $"Could not retrieve buttons in screen wtih ID: {screenId}.",
-                    ex);
+                throw;
+
             }
 
 
@@ -256,13 +252,13 @@ namespace App.Application.Services
                 }
                 catch (SqlException ex)
                 {
-                    _logger.LogError(ex, "SQL error {SqlErrorNumber} while creating bulk buttons.", ex.Number);
-                    throw new DataAccessException("A database error occurred while creating the buttons.", ex);
+                    _logger.LogError(ex, ex.Message, ex.Number);
+                    throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unexpected error while creating bulk buttons.");
-                    throw new DataAccessException("An unexpected error occurred while creating the buttons.", ex);
+                    _logger.LogError(ex, ex.Message);
+                    throw;
                 }
             }
         }
@@ -388,13 +384,13 @@ namespace App.Application.Services
                 }
                 catch (SqlException ex)
                 {
-                    _logger.LogError(ex, "SQL error {SqlErrorNumber} while updating bulk buttons.", ex.Number);
-                    throw new DataAccessException("A database error occurred while updating the buttons.", ex);
+                    _logger.LogError(ex, ex.Message, ex.Number);
+                    throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unexpected error while updating bulk buttons.");
-                    throw new DataAccessException("An unexpected error occurred while updating the buttons.", ex);
+                    _logger.LogError(ex, ex.Message);
+                    throw;
                 }
             }
         }
@@ -420,13 +416,13 @@ namespace App.Application.Services
                 }
                 catch (SqlException ex)
                 {
-                    _logger.LogError(ex, "SQL error {SqlErrorNumber} while deleting bulk buttons.", ex.Number);
-                    throw new DataAccessException("A database error occurred while deleting the buttons.", ex);
+                    _logger.LogError(ex, ex.Message, ex.Number);
+                    throw;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unexpected error while deleting bulk buttons.");
-                    throw new DataAccessException("An unexpected error occurred while deleting the buttons.", ex);
+                    _logger.LogError(ex, ex.Message);
+                    throw;
                 }
             }
         }

@@ -1,6 +1,7 @@
 ﻿using App.Application.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -52,8 +53,8 @@ namespace App.WinForms
                     {
                         _stateService.Set(bankDetails);
                         var mainForm = _serviceProvider.GetRequiredService<MainForm>();
-                        mainForm.Show();
-                        this.Hide();
+                        FormUtils.CenterToForm(this, mainForm);
+                        mainForm.Show(this);
                     }
                     else
                     {
@@ -65,8 +66,14 @@ namespace App.WinForms
                     MessageBox.Show("Please enter a valid number", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
+            //18456 -> wrong password or user / 4060 wrong db name / 11001 -> wrong server  -> change to enums
+            catch (SqlException ex) when (ex.Number == 18456 || ex.Number == 4060 || ex.Number == 11001)
+            {
+                MessageBox.Show("Unable to connect to the database. Please verify your network connection, server details, and credentials."
+                    , "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
-            catch
+            catch (Exception)
             {
                 MessageBox.Show("A problem occured while logging into the bank", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -76,8 +83,8 @@ namespace App.WinForms
         {
             BankIdTextBox.Text = string.Empty;
             var registerForm = _serviceProvider.GetRequiredService<RegisterForm>();
+            FormUtils.CenterToForm(this, registerForm);
             registerForm.Show();
-            this.Hide();
         }
 
         private void LoginForm_FormClosed(object sender, FormClosedEventArgs e)

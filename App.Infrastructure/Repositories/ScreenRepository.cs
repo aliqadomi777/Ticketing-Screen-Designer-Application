@@ -1,5 +1,6 @@
 ﻿using App.Domain.Interfaces;
 using App.Domain.Models;
+using App.Infrastructure.Exceptions;
 using App.Shared;
 using System;
 using System.Collections.Generic;
@@ -135,20 +136,20 @@ namespace App.Infrastructure.Repositories
                     }
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueConstraintViolation)
             {
                 throw new DuplicateRecordException(
                     $"A Screen named '{screenModel.ScreenName}' already exists.",
                     ex);
             }
-            catch (SqlException ex) when (ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueIndexViolation)
             {
                 throw new ExcessiveScreenActivationException(
                     $"Another screen is already Active for the bank",
                     ex);
             }
 
-            catch (SqlException ex) when (ex.Number == 547)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.ForeignKeyViolation)
             {
                 throw new ParentDeletedWithChildConflictException(
                     $"The bank your adding screen to has been deleted",
@@ -189,13 +190,13 @@ namespace App.Infrastructure.Repositories
                     }
                 }
             }
-            catch (SqlException ex) when (ex.Number == 2627)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueConstraintViolation)
             {
                 throw new DuplicateRecordException(
                     $"A Screen named '{screenModel.ScreenName}' already exists.",
                     ex);
             }
-            catch (SqlException ex) when (ex.Number == 2601)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.UniqueIndexViolation)
             {
                 throw new ExcessiveScreenActivationException(
                     $"Another screen is already Active for the bank",

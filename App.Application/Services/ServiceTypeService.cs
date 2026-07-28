@@ -40,8 +40,8 @@ namespace App.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed executing query retrieving service type with ID: {serviceId}", serviceId);
-                throw new DataAccessException($"Could not retrieve profile service type for service ID {serviceId}.", ex);
+                _logger.LogError(ex, ex.Message, serviceId);
+                throw;
             }
         }
 
@@ -58,8 +58,8 @@ namespace App.Application.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed executing query retrieving all service types");
-                throw new DataAccessException("Could not retrieve all service types", ex);
+                _logger.LogError(ex, ex.Message);
+                throw;
             }
 
         }
