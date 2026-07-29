@@ -1,11 +1,13 @@
 {
+  "AuthenticationMode": "",
   "ConnectionStrings": {
-    "DefaultConnection": {
-      "Server": "",
-      "Database": "",
+    "Server": "",
+    "Database": "",
+    "TrustServerCertificate": "",
+    "SqlServerAuthentication": {
       "UserId": "",
-      "Password": "",
-      "TrustServerCertificate": ""
+      "Password": ""
     }
+
   }
 }

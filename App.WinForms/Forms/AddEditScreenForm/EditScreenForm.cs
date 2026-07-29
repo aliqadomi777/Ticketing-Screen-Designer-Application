@@ -25,7 +25,6 @@ namespace App.WinForms
         private bool _isCoreScreenChanged = false;
         private DateTimeOffset _fetchTime;
 
-
         public EditScreenForm(IScreenService screenService,
             IServiceProvider serviceProvider, IUiStateService stateService,
             IButtonService buttonService)
@@ -533,12 +532,12 @@ namespace App.WinForms
             var screenDetails = _stateService.Get<ScreenResponseDto>();
             var pendingCreateScreen = _stateService.Get<CreateScreenRequestDto>();
             var pendingUpdateScreen = _stateService.Get<BaseScreenRequestDto>();
-
             var pendingButtonsUpdate = _stateService.Get<List<UpdateButtonRequestDto>>() ?? new List<UpdateButtonRequestDto>();
             var pendingButtonsCreate = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
             var pendingDeletesSet = new HashSet<int>(_stateService.Get<List<int>>() ?? new List<int>());
             var unifiedButtons = new Dictionary<string, object>();
             List<BaseButtonResponseDto> databaseButtons = new List<BaseButtonResponseDto>();
+            var latestScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
 
             this.Text = "Edit Screen";
 
@@ -558,7 +557,7 @@ namespace App.WinForms
                     databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId) ?? new List<BaseButtonResponseDto>();
                     _stateService.Set(databaseButtons);
 
-                    if (databaseButtons.Count() == 0)
+                    if (latestScreen == null)
                     {
                         MessageBox.Show("This Screen has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         this.Close();

@@ -54,14 +54,13 @@ namespace App.WinForms
                 MessageBox.Show($"Configuration file not found:\n{configPath}");
                 Environment.Exit(1);
             }
-            IConfigurationSection connectionSection = null;
+
+            IConfiguration configuration = null;
             try
             {
-                var configuration = new ConfigurationBuilder()
+                configuration = new ConfigurationBuilder()
                                     .AddJsonFile(configPath, optional: false)
                                     .Build();
-
-                connectionSection = configuration.GetSection("ConnectionStrings:DefaultConnection");
             }
             catch (Exception)
             {
@@ -72,39 +71,99 @@ namespace App.WinForms
                 Environment.Exit(1);
             }
 
+            string authMode = configuration["AuthenticationMode"];
+            if (string.IsNullOrWhiteSpace(authMode))
+            {
+                MessageBox.Show("AuthenticationMode is missing from the configuration file.",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(1);
+            }
 
+            var connectionSection = configuration.GetSection("ConnectionStrings");
             if (!connectionSection.Exists())
             {
-                MessageBox.Show("Connection string to database does not exist",
-                                "Error",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                MessageBox.Show("ConnectionStrings section does not exist",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(1);
             }
 
             string server = connectionSection["Server"];
             string database = connectionSection["Database"];
-            string userId = connectionSection["UserId"];
-            string password = connectionSection["Password"];
+            string trustCert = connectionSection["TrustServerCertificate"];
+
+
             var missingFields = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(server)) missingFields.Add("Server");
-            if (string.IsNullOrWhiteSpace(database)) missingFields.Add("Database");
-            if (string.IsNullOrWhiteSpace(userId)) missingFields.Add("UserId");
-            if (string.IsNullOrWhiteSpace(password)) missingFields.Add("Password");
+            if (string.IsNullOrWhiteSpace(trustCert))
+            {
+                missingFields.Add("TrustServerCertificate");
+            }
+            else
+            {
+                if (trustCert != "False" && trustCert != "True")
+                {
+                    MessageBox.Show($"TrustServerCertificate must be filled with True or False only", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Environment.Exit(1);
+                }
+            }
+            if (string.IsNullOrWhiteSpace(server))
+            {
+                missingFields.Add("Server");
+            }
+            if (string.IsNullOrWhiteSpace(database))
+            {
+                missingFields.Add("Database");
+            }
+
+            string connectionString = "";
+
+            if (authMode == "Windows Authentication")
+            {
+                var winSection = connectionSection.GetSection("WindowsAuthentication");
+                string trustedConnection = winSection["Trusted_Connection"];
+
+                if (missingFields.Count == 0)
+                {
+                    connectionString = $"Server={server};Database={database};Trusted_Connection=True;TrustServerCertificate={trustCert};";
+                }
+            }
+            else if (authMode == "Server Authentication")
+            {
+                var sqlSection = connectionSection.GetSection("SqlServerAuthentication");
+                string userId = sqlSection["UserId"];
+                string password = sqlSection["Password"];
+
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    missingFields.Add("SqlServerAuthentication:UserId");
+                }
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    missingFields.Add("SqlServerAuthentication:Password");
+                }
+
+                if (missingFields.Count == 0)
+                {
+                    connectionString = $"Server={server};Database={database};User ID={userId};Password={password};TrustServerCertificate={trustCert};";
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Unsupported AuthenticationMode: '{authMode}'. Use 'Windows Authentication' or 'Server Authentication'.",
+                                "Invalid Configuration", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Environment.Exit(1);
+            }
 
             if (missingFields.Count > 0)
             {
                 string errorMessage = string.Join(", ", missingFields);
-                MessageBox.Show($"Connection string values cannot be empty for the following parameters: {errorMessage}",
-                                "Missing Configuration",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                MessageBox.Show($"The following parameters are required and cannot be empty: {errorMessage}",
+                                "Missing Configuration", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Environment.Exit(1);
             }
 
-            string connectionString = $"Server={server};Database={database};User Id={userId};Password={password};" +
-                         $"TrustServerCertificate=True;";
+
+
             var services = new ServiceCollection();
             services.AddLogging(loggingBuilder =>
             {
