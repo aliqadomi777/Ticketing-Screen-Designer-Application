@@ -172,6 +172,7 @@
     <Compile Include="Forms\RegisterForm\RegisterForm.Designer.cs">
       <DependentUpon>RegisterForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\SqlErrorTypes.cs" />
     <Compile Include="Forms\StateService\IUiStateService.cs" />
     <Compile Include="Forms\StateService\UiStateService.cs" />
     <Compile Include="Program.cs" />

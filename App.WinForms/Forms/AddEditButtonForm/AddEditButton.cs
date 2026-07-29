@@ -447,7 +447,6 @@ namespace App.WinForms
                 if (System.Windows.Forms.Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
                 {
                     editScreenForm.refreshList();
-                    editScreenForm.Show();
                 }
                 return;
             }

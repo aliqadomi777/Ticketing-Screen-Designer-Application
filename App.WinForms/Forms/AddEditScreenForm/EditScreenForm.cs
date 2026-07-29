@@ -98,19 +98,26 @@ namespace App.WinForms
                         _isCoreScreenChanged = ScreenNameTextBox.Text != latestScreen.ScreenName
                            || ActivateButton.Checked != latestScreen.IsActive;
 
-                        // Check if any button we want to update is missing from the database
-                        bool hasMissingUpdates = pendingUpdates.Any(p => !databaseButtons.Any(db => db.ButtonId == p.ButtonId));
+                        var dbIds = new HashSet<int>(databaseButtons.Select(db => db.ButtonId));
+                        var cachedIds = new HashSet<int>(cachedDbButtons.Select(c => c.ButtonId));
+                        var deleteIds = new HashSet<int>(pendingDeletes);
+
+                        // Check if any button we want to update is missing from the database -> Deleted
+                        bool hasMissingUpdates = pendingUpdates.Any(p => !dbIds.Contains(p.ButtonId));
 
                         // Check if any button we want to delete still exists in the database
-                        bool hasDeletesToProcess = pendingDeletes.Any(p => databaseButtons.Any(db => db.ButtonId == p));
+                        bool hasDeletesToProcess = deleteIds.Any(id => dbIds.Contains(id));
 
-                        // Check if any buttons newly added to db that is not ye loaded into Current instance
-                        bool hasNewDbButtons = databaseButtons.Any(db => !cachedDbButtons.Any(c => c.ButtonId == db.ButtonId));
+                        // Check if any buttons newly added to db that is not yet loaded into Current instance
+                        bool hasNewDbButtons = databaseButtons.Any(db => !cachedIds.Contains(db.ButtonId));
+
+                        // Check if cached button deleted in db -> Other instance deleted it
+                        bool isCacheOutdatedByDeletes = cachedDbButtons.Any(c => !dbIds.Contains(c.ButtonId));
 
                         screenDetails.ScreenName = latestScreen.ScreenName;
                         screenDetails.IsActive = latestScreen.IsActive;
 
-                        if (hasMissingUpdates || hasDeletesToProcess || _isCoreScreenChanged || hasNewDbButtons)
+                        if (hasMissingUpdates || hasDeletesToProcess || _isCoreScreenChanged || hasNewDbButtons || isCacheOutdatedByDeletes)
                         {
                             DialogResult syncOrCancel = MessageBox.Show(
                                             "Current Info are outdated press Ok to Sync Screen's Info or Cancel to Exit", "Warning",
@@ -515,29 +522,32 @@ namespace App.WinForms
 
         //unifiedButtons -> Holds all buttons -> for listing and selecting 
 
+        //This can be further optimized by checking cached buttons vs db buttons -> Not clearing every refresh
         public void refreshList()
         {
             _stateService.Clear<List<BaseButtonResponseDto>>();
+
+            ButtonsList.BeginUpdate();
             ButtonsList.Items.Clear();
+
             var screenDetails = _stateService.Get<ScreenResponseDto>();
             var pendingCreateScreen = _stateService.Get<CreateScreenRequestDto>();
             var pendingUpdateScreen = _stateService.Get<BaseScreenRequestDto>();
 
             var pendingButtonsUpdate = _stateService.Get<List<UpdateButtonRequestDto>>() ?? new List<UpdateButtonRequestDto>();
             var pendingButtonsCreate = _stateService.Get<List<BaseButtonDto>>() ?? new List<BaseButtonDto>();
-
-            var pendingDeletes = _stateService.Get<List<int>>() ?? new List<int>();
-
+            var pendingDeletesSet = new HashSet<int>(_stateService.Get<List<int>>() ?? new List<int>());
             var unifiedButtons = new Dictionary<string, object>();
             List<BaseButtonResponseDto> databaseButtons = new List<BaseButtonResponseDto>();
 
             this.Text = "Edit Screen";
+
             if (screenDetails == null)
             {
                 this.Text = "Add Screen";
                 RefreshButton.Hide();
             }
-            if (screenDetails != null)
+            else
             {
                 ScreenNameTextBox.Text = screenDetails.ScreenName;
                 ActivateButton.Checked = screenDetails.IsActive;
@@ -545,12 +555,18 @@ namespace App.WinForms
 
                 try
                 {
-
-                    databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId);
+                    databaseButtons = _buttonService.GetAllButtonsDetails(screenDetails.ScreenId) ?? new List<BaseButtonResponseDto>();
                     _stateService.Set(databaseButtons);
+
+                    if (databaseButtons.Count() == 0)
+                    {
+                        MessageBox.Show("This Screen has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        this.Close();
+                        return;
+                    }
                     foreach (var btn in databaseButtons)
                     {
-                        if (!pendingDeletes.Contains(btn.ButtonId))
+                        if (!pendingDeletesSet.Contains(btn.ButtonId))
                         {
                             unifiedButtons[btn.ButtonId.ToString()] = btn;
                         }
@@ -561,31 +577,31 @@ namespace App.WinForms
                     MessageBox.Show("A problem occurred while retrieving buttons for this screen", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            else if (pendingCreateScreen != null)
+
+            if (pendingCreateScreen != null)
             {
                 ScreenNameTextBox.Text = pendingCreateScreen.ScreenName;
                 ActivateButton.Checked = pendingCreateScreen.IsActive;
                 DeactivateButton.Checked = !pendingCreateScreen.IsActive;
             }
+
             if (pendingUpdateScreen != null)
             {
                 ScreenNameTextBox.Text = pendingUpdateScreen.ScreenName;
                 ActivateButton.Checked = pendingUpdateScreen.IsActive;
                 DeactivateButton.Checked = !pendingUpdateScreen.IsActive;
             }
-            //Delete cached pending updates -> deleted by other instance
 
-            pendingButtonsUpdate.RemoveAll(b => !databaseButtons.Any(o => o.ButtonId == b.ButtonId));
-
+            var dbIds = new HashSet<int>(databaseButtons.Select(o => o.ButtonId));
+            pendingButtonsUpdate.RemoveAll(b => !dbIds.Contains(b.ButtonId));
 
             foreach (var updateBtn in pendingButtonsUpdate)
             {
-                if (!pendingDeletes.Contains(updateBtn.ButtonId))
+                if (!pendingDeletesSet.Contains(updateBtn.ButtonId))
                 {
                     unifiedButtons[updateBtn.ButtonId.ToString()] = updateBtn;
                 }
             }
-
 
             foreach (var createBtn in pendingButtonsCreate)
             {
@@ -593,12 +609,11 @@ namespace App.WinForms
             }
 
             ButtonsList.DisplayMember = "DisplayText";
+            ButtonsList.Items.AddRange(unifiedButtons.Values.ToArray());
+            ButtonsList.EndUpdate();
 
-            foreach (var buttonObj in unifiedButtons.Values)
-            {
-                ButtonsList.Items.Add(buttonObj);
-            }
         }
+
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
@@ -615,7 +630,6 @@ namespace App.WinForms
                 if (System.Windows.Forms.Application.OpenForms["MainForm"] is MainForm mainForm)
                 {
                     mainForm.refreshList();
-                    mainForm.Show();
                 }
 
                 return;

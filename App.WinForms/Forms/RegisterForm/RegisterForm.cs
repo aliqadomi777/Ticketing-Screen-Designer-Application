@@ -1,6 +1,7 @@
 ﻿using App.Application.DTO.Banks;
 using App.Application.Interfaces;
 using App.Shared;
+using App.WinForms.Forms;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
@@ -11,7 +12,7 @@ namespace App.WinForms
     public partial class RegisterForm : Form
     {
         private readonly IBankService _bankService;
-        private bool _isNavigatingBack = true;
+        private bool _isNavigatingBack = false;
 
         public RegisterForm(IBankService bankService)
         {
@@ -56,8 +57,8 @@ namespace App.WinForms
             {
                 MessageBox.Show(ex.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            //18456 -> wrong password or user / 4060 wrong db name / 11001 -> wrong server  -> change to enums
-            catch (SqlException ex) when (ex.Number == 18456 || ex.Number == 4060 || ex.Number == 11001)
+            catch (SqlException ex) when (ex.Number == (int)SqlErrorTypes.LoginFailed ||
+                ex.Number == (int)SqlErrorTypes.DatabaseAccessDenied || ex.Number == (int)SqlErrorTypes.ServerNotFound)
             {
                 MessageBox.Show("Unable to connect to the database. Please verify your network connection, server details, and credentials."
                     , "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -89,11 +90,6 @@ namespace App.WinForms
 
             if (_isNavigatingBack)
             {
-
-                if (System.Windows.Forms.Application.OpenForms["LoginForm"] is LoginForm loginForm)
-                {
-                    loginForm.Show();
-                }
                 return;
             }
 

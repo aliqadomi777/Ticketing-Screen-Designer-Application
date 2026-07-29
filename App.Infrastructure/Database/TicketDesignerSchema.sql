@@ -128,6 +128,23 @@ BEGIN
 END;
 GO
 
+DROP TRIGGER IF EXISTS  dbo.triggerModifiedAt_ButtonsDelete
+GO
+CREATE TRIGGER dbo.triggerModifiedAt_ButtonsDelete 
+ON dbo.Buttons
+AFTER DELETE 
+AS 
+BEGIN 
+    SET NOCOUNT ON; 
+    
+    UPDATE s 
+    SET s.ModifiedAt = SYSUTCDATETIME() 
+    FROM dbo.Screens s 
+    INNER JOIN deleted d ON s.ScreenID = d.ScreenID; 
+END; 
+GO
+
+
 DROP TRIGGER IF EXISTS  dbo.triggerModifiedAt_Buttons
 GO
 CREATE TRIGGER dbo.triggerModifiedAt_Buttons
@@ -197,4 +214,3 @@ BEGIN
     WHERE IsActive = 1;
 END;
 GO
-

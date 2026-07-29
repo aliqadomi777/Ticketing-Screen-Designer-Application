@@ -67,19 +67,25 @@ namespace App.WinForms
         //Optimize solution -> usage of modified date
         public void refreshList()
         {
-            screenList.Items.Clear();
+
             var bankSession = _stateService.Get<BankResponseDto>();
             TitleLabel.Text = $"Main Form - {bankSession.BankName}";
             centerTitle();
-            if (bankSession != null)
+            screenList.BeginUpdate();
+            screenList.Items.Clear();
+            try
             {
                 var screens = _screenService.GetAllScreensDetails(bankSession.BankId);
                 screenList.DisplayMember = "DisplayText";
-                foreach (var screen in screens)
-                {
-                    screenList.Items.Add(screen);
-                }
+                screenList.Items.AddRange(screens.ToArray());
+                screenList.EndUpdate();
             }
+            catch (Exception)
+            {
+                MessageBox.Show($"A problem Occured while loading screens", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            }
+
         }
         private void MainForm_Click(object sender, EventArgs e)
         {
