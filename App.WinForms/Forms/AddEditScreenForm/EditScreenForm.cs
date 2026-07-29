@@ -111,7 +111,7 @@ namespace App.WinForms
                         // Check if any buttons newly added to db that is not yet loaded into Current instance
                         bool hasNewDbButtons = databaseButtons.Any(db => !cachedIds.Contains(db.ButtonId));
 
-                        // Check if cached button deleted in db -> Other instance deleted it
+                        // Check if cached button is  deleted in db -> Other instance deleted it
                         bool isCacheOutdatedByDeletes = cachedDbButtons.Any(c => !dbIds.Contains(c.ButtonId));
 
                         screenDetails.ScreenName = latestScreen.ScreenName;

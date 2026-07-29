@@ -222,8 +222,8 @@ namespace App.WinForms
                 //Checks if any changes occured on the existing button info 
                 string originalAction = button.TypeName;
 
-                coreChanged = ButtonNameArTextBox.Text != button.ButtonNameAR ||
-                                  ButtonNameEnTextBox.Text != button.ButtonNameEN ||
+                coreChanged = ButtonNameArTextBox.Text.Trim() != button.ButtonNameAR ||
+                                  ButtonNameEnTextBox.Text.Trim() != button.ButtonNameEN ||
                                   originalAction != selectedAction;
 
 
@@ -231,8 +231,8 @@ namespace App.WinForms
                                     (selectedServiceType?.ServiceId != (ticketButton?.ServiceId));
 
                 messageChanged = selectedAction == "Show Message" &&
-                                     (ArMessageTextBox.Text != (messageButton?.MessageAR ?? string.Empty) ||
-                                      EnMessageTextBox.Text != (messageButton?.MessageEN ?? string.Empty));
+                                     (ArMessageTextBox.Text.Trim() != (messageButton?.MessageAR ?? string.Empty) ||
+                                      EnMessageTextBox.Text.Trim() != (messageButton?.MessageEN ?? string.Empty));
                 buttonChanged = ticketChanged || messageChanged || coreChanged;
             }
 
@@ -252,8 +252,8 @@ namespace App.WinForms
                     {
                         var updatedTicketButton = new UpdateTicketButtonRequest
                         {
-                            ButtonNameAR = ButtonNameArTextBox.Text,
-                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonNameAR = ButtonNameArTextBox.Text.Trim(),
+                            ButtonNameEN = ButtonNameEnTextBox.Text.Trim(),
                             ButtonId = activeButtonId,
                             ButtonType = selectedButtonType.TypeId,
                             ServiceId = selectedServiceType.ServiceId,
@@ -282,13 +282,13 @@ namespace App.WinForms
                         }
                         var updatedMessageButton = new UpdateMessageButtonRequest
                         {
-                            ButtonNameAR = ButtonNameArTextBox.Text,
-                            ButtonNameEN = ButtonNameEnTextBox.Text,
+                            ButtonNameAR = ButtonNameArTextBox.Text.Trim(),
+                            ButtonNameEN = ButtonNameEnTextBox.Text.Trim(),
                             ButtonId = activeButtonId,
                             ButtonType = selectedButtonType.TypeId,
                             messageId = messageButton?.MessageId ?? 0,
-                            MessageAR = ArMessageTextBox.Text,
-                            MessageEN = EnMessageTextBox.Text,
+                            MessageAR = ArMessageTextBox.Text.Trim(),
+                            MessageEN = EnMessageTextBox.Text.Trim(),
                         };
                         if (!checkIfExists(updatedMessageButton, activeButtonId))
                         {
@@ -321,8 +321,8 @@ namespace App.WinForms
                         var newButton = new CreateTicketButtonRequestDto
                         {
                             ScreenId = screen?.ScreenId ?? 0,
-                            ButtonNameEN = ButtonNameEnTextBox.Text,
-                            ButtonNameAR = ButtonNameArTextBox.Text,
+                            ButtonNameEN = ButtonNameEnTextBox.Text.Trim(),
+                            ButtonNameAR = ButtonNameArTextBox.Text.Trim(),
                             ServiceId = selectedServiceType.ServiceId,
                             ButtonType = selectedButtonType.TypeId
                         };
@@ -343,8 +343,8 @@ namespace App.WinForms
                             ButtonNameEN = ButtonNameEnTextBox.Text,
                             ButtonNameAR = ButtonNameArTextBox.Text,
                             ButtonType = selectedButtonType.TypeId,
-                            MessageAR = ArMessageTextBox.Text,
-                            MessageEN = EnMessageTextBox.Text
+                            MessageAR = ArMessageTextBox.Text.Trim(),
+                            MessageEN = EnMessageTextBox.Text.Trim()
                         };
                         ValidationExtensions.ValidateModel(newButton);
 
