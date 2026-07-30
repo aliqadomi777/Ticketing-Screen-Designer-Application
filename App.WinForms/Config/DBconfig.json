@@ -1,9 +1,9 @@
 {
-  "AuthenticationMode": "",
+  "AuthenticationMode": "Windows Authentication",
   "ConnectionStrings": {
-    "Server": "",
-    "Database": "",
-    "TrustServerCertificate": "",
+    "Server": "localhost",
+    "Database": "ticketDesignerDB",
+    "TrustServerCertificate": "true",
     "SqlServerAuthentication": {
       "UserId": "",
       "Password": ""

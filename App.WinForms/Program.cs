@@ -100,6 +100,7 @@ namespace App.WinForms
             }
             else
             {
+                trustCert = char.ToUpper(trustCert[0]) + trustCert.Substring(1);
                 if (trustCert != "False" && trustCert != "True")
                 {
                     MessageBox.Show($"TrustServerCertificate must be filled with True or False only", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

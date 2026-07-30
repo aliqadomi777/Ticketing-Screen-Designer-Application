@@ -537,7 +537,12 @@ namespace App.WinForms
             var pendingDeletesSet = new HashSet<int>(_stateService.Get<List<int>>() ?? new List<int>());
             var unifiedButtons = new Dictionary<string, object>();
             List<BaseButtonResponseDto> databaseButtons = new List<BaseButtonResponseDto>();
-            var latestScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
+            ScreenResponseDto latestScreen = null;
+            if (screenDetails != null)
+            {
+                latestScreen = _screenService.GetScreenDetails(screenDetails.ScreenId);
+
+            }
 
             this.Text = "Edit Screen";
 
@@ -625,6 +630,14 @@ namespace App.WinForms
             if (_isNavigatingBack)
             {
                 ClearSessionCache();
+                var openEditForms = System.Windows.Forms.Application.OpenForms
+                        .OfType<AddEditButton>()
+                        .ToList();
+
+                foreach (var editForm in openEditForms)
+                {
+                    editForm.Close();
+                }
 
                 if (System.Windows.Forms.Application.OpenForms["MainForm"] is MainForm mainForm)
                 {

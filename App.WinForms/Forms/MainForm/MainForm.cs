@@ -69,7 +69,7 @@ namespace App.WinForms
         {
 
             var bankSession = _stateService.Get<BankResponseDto>();
-            TitleLabel.Text = $"Main Form - {bankSession.BankName}";
+            TitleLabel.Text = $"{bankSession.BankName}";
             centerTitle();
             screenList.BeginUpdate();
             screenList.Items.Clear();
@@ -184,6 +184,9 @@ namespace App.WinForms
 
         private void RefreshButton_Click(object sender, EventArgs e)
         {
+            //Resets the timer if manually refreshed
+            _periodicTimer.Stop();
+            _periodicTimer.Start();
             refreshList();
         }
     }
