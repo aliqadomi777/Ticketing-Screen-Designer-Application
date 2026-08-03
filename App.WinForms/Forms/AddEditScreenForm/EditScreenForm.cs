@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -34,15 +33,6 @@ namespace App.WinForms
             _serviceProvider = serviceProvider;
             _stateService = stateService;
             _buttonService = buttonService;
-            this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
-
-            ButtonsList.BackColor = ColorTranslator.FromHtml("#FFFFFF");
-            ButtonsList.ForeColor = ColorTranslator.FromHtml("#333333");
-
-            AddButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
-            EditButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
-            DeleteButton.BackColor = ColorTranslator.FromHtml("#D83B01");
-
 
 
         }
@@ -100,6 +90,8 @@ namespace App.WinForms
                         var dbIds = new HashSet<int>(databaseButtons.Select(db => db.ButtonId));
                         var cachedIds = new HashSet<int>(cachedDbButtons.Select(c => c.ButtonId));
                         var deleteIds = new HashSet<int>(pendingDeletes);
+                        var pendingUpdateIds = new HashSet<int>(pendingUpdates.Select(p => p.ButtonId));
+                        var cachedLookup = cachedDbButtons.ToDictionary(c => c.ButtonId);
 
                         // Check if any button we want to update is missing from the database -> Deleted
                         bool hasMissingUpdates = pendingUpdates.Any(p => !dbIds.Contains(p.ButtonId));
@@ -110,13 +102,21 @@ namespace App.WinForms
                         // Check if any buttons newly added to db that is not yet loaded into Current instance
                         bool hasNewDbButtons = databaseButtons.Any(db => !cachedIds.Contains(db.ButtonId));
 
-                        // Check if cached button is  deleted in db -> Other instance deleted it
-                        bool isCacheOutdatedByDeletes = cachedDbButtons.Any(c => !dbIds.Contains(c.ButtonId));
+                        // Check if cached button is  deleted in db exluding already deleted from cached -> Other instance deleted it
+                        bool isCacheOutdatedByDeletes = cachedDbButtons.Any(c => !dbIds.Contains(c.ButtonId)
+                                                                            && !deleteIds.Contains(c.ButtonId));
 
+                        // Check if a db button was modified and not reflected on current cached buttons
+                        // excluding already modified buttons on current instance
+                        bool hasModifiedButtons = databaseButtons.Any(db =>
+                            !pendingUpdateIds.Contains(db.ButtonId)
+                            && cachedLookup.TryGetValue(db.ButtonId, out var cachedBtn)
+                            && db.ModifiedAt > cachedBtn.ModifiedAt
+                        );
                         screenDetails.ScreenName = latestScreen.ScreenName;
                         screenDetails.IsActive = latestScreen.IsActive;
 
-                        if (hasMissingUpdates || hasDeletesToProcess || _isCoreScreenChanged || hasNewDbButtons || isCacheOutdatedByDeletes)
+                        if (hasModifiedButtons || hasMissingUpdates || hasDeletesToProcess || _isCoreScreenChanged || hasNewDbButtons || isCacheOutdatedByDeletes)
                         {
                             DialogResult syncOrCancel = MessageBox.Show(
                                             "Current Info are outdated press Ok to Sync Screen's Info or Cancel to Exit", "Warning",
@@ -137,6 +137,7 @@ namespace App.WinForms
                             {
                                 ClearSessionCache();
                                 _isNavigatingBack = true;
+                                refreshParentForm();
                                 this.Close();
                             }
                         }
@@ -183,6 +184,7 @@ namespace App.WinForms
                         ClearSessionCache();
                         //MessageBox.Show($"Screen and buttons created successfully!", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         _isNavigatingBack = true;
+                        refreshParentForm();
                         this.Close();
                     }
                     else
@@ -241,6 +243,7 @@ namespace App.WinForms
                             //MessageBox.Show($"All changes updated correctly", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                             _isNavigatingBack = true;
+                            refreshParentForm();
                             this.Close();
                         }
                         else
@@ -289,9 +292,6 @@ namespace App.WinForms
             _stateService.Clear<BaseScreenRequestDto>();
         }
 
-
-
-
         private void preserveScreen()
         {
             var screenDetails = _stateService.Get<ScreenResponseDto>();
@@ -333,10 +333,13 @@ namespace App.WinForms
                 _stateService.Clear<BaseButtonResponseDto>();
                 _stateService.Clear<UpdateButtonRequestDto>();
                 _stateService.Clear<BaseButtonDto>();
-                var editButtonForm = _serviceProvider.GetRequiredService<AddEditButton>();
-                FormUtils.CenterToForm(this, editButtonForm);
-
-                editButtonForm.Show();
+                var editButtonForm = new AddEditButton(
+                    _serviceProvider.GetRequiredService<IUiStateService>(),
+                    _serviceProvider.GetRequiredService<IServiceTypeService>(),
+                    _serviceProvider.GetRequiredService<IButtonTypeService>()
+                    );
+                editButtonForm.StartPosition = FormStartPosition.CenterParent;
+                editButtonForm.ShowDialog(this);
 
             }
 
@@ -414,10 +417,13 @@ namespace App.WinForms
                 try
                 {
                     preserveScreen();
-                    var editButtonForm = _serviceProvider.GetRequiredService<AddEditButton>();
-                    FormUtils.CenterToForm(this, editButtonForm);
-
-                    editButtonForm.Show();
+                    var editButtonForm = new AddEditButton(
+                        _serviceProvider.GetRequiredService<IUiStateService>(),
+                        _serviceProvider.GetRequiredService<IServiceTypeService>(),
+                        _serviceProvider.GetRequiredService<IButtonTypeService>()
+                        );
+                    editButtonForm.StartPosition = FormStartPosition.CenterParent;
+                    editButtonForm.ShowDialog(this);
                     //refreshList();
                 }
                 catch (ValidationException ex)
@@ -565,6 +571,7 @@ namespace App.WinForms
                     if (latestScreen == null)
                     {
                         MessageBox.Show("This Screen has been deleted by someone else", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        refreshParentForm();
                         this.Close();
                         return;
                     }
@@ -621,57 +628,25 @@ namespace App.WinForms
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
-            _isNavigatingBack = true;
+            ClearSessionCache();
+            refreshParentForm();
             this.Close();
         }
 
-        private void EditScreenForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            if (_isNavigatingBack)
-            {
-                ClearSessionCache();
-                var openEditForms = System.Windows.Forms.Application.OpenForms
-                        .OfType<AddEditButton>()
-                        .ToList();
-
-                foreach (var editForm in openEditForms)
-                {
-                    editForm.Close();
-                }
-
-                if (System.Windows.Forms.Application.OpenForms["MainForm"] is MainForm mainForm)
-                {
-                    mainForm.refreshList();
-                }
-
-                return;
-            }
 
 
-            else
-            {
-                System.Windows.Forms.Application.Exit();
-            }
-        }
-
-
-
-
-        private void EditScreenForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-
-            if (e.CloseReason == CloseReason.UserClosing)
-            {
-                _isNavigatingBack = true;
-            }
-
-        }
         //Refreshing prdouces no problems -> we preserve all needed states of data
         private void RefreshButton_Click(object sender, EventArgs e)
         {
             preserveScreen();
             refreshList();
         }
-
+        private void refreshParentForm()
+        {
+            if (this.Owner is MainForm mainForm)
+            {
+                mainForm.refreshList();
+            }
+        }
     }
 }

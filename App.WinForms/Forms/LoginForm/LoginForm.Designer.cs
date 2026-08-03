@@ -36,10 +36,10 @@
             // 
             // BankIdTextBox
             // 
-            this.BankIdTextBox.BackColor = System.Drawing.Color.DarkSlateGray;
+            this.BankIdTextBox.BackColor = System.Drawing.SystemColors.Window;
             this.BankIdTextBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.BankIdTextBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
-            this.BankIdTextBox.ForeColor = System.Drawing.Color.LightSteelBlue;
+            this.BankIdTextBox.ForeColor = System.Drawing.SystemColors.WindowText;
             this.BankIdTextBox.Location = new System.Drawing.Point(187, 78);
             this.BankIdTextBox.Margin = new System.Windows.Forms.Padding(4);
             this.BankIdTextBox.Name = "BankIdTextBox";
@@ -85,7 +85,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.Gainsboro;
+            this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(512, 260);
             this.Controls.Add(this.RegisterButton);
             this.Controls.Add(this.LoginButton);

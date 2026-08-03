@@ -175,11 +175,11 @@ namespace App.WinForms
             services.AddApplicationServices();
             services.AddInfrastructureServices(connectionString);
             services.AddSingleton<IUiStateService, UiStateService>();
-            services.AddTransient<LoginForm>();
-            services.AddTransient<MainForm>();
-            services.AddTransient<RegisterForm>();
-            services.AddTransient<EditScreenForm>();
-            services.AddTransient<AddEditButton>();
+            services.AddSingleton<LoginForm>();
+            services.AddSingleton<MainForm>();
+            services.AddSingleton<RegisterForm>();
+            services.AddSingleton<EditScreenForm>();
+            services.AddSingleton<AddEditButton>();
 
 
 

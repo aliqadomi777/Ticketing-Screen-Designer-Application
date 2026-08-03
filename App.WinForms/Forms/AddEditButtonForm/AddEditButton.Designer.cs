@@ -206,8 +206,6 @@
             this.Name = "AddEditButton";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "AddEditButton";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AddEditButton_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.AddEditButton_FormClosed);
             this.Load += new System.EventHandler(this.AddEditButton_Load);
             this.buttonDetailsLayout.ResumeLayout(false);
             this.buttonDetailsLayout.PerformLayout();

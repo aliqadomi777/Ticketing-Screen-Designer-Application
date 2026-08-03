@@ -20,17 +20,7 @@ namespace App.WinForms
             _serviceProvider = serviceProvider;
             _stateService = stateService;
 
-            this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
 
-            BankIdLabel.ForeColor = ColorTranslator.FromHtml("#3C3C3C");
-            BankIdLabel.BackColor = ColorTranslator.FromHtml("#F5F7FA");
-
-            BankIdTextBox.BackColor = ColorTranslator.FromHtml("#FFFFFF");
-            BankIdTextBox.ForeColor = ColorTranslator.FromHtml("#333333");
-
-            LoginButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
-
-            RegisterButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
 
         }
 
@@ -53,9 +43,13 @@ namespace App.WinForms
                     if (bankDetails != null)
                     {
                         _stateService.Set(bankDetails);
-                        var mainForm = _serviceProvider.GetRequiredService<MainForm>();
-                        FormUtils.CenterToForm(this, mainForm);
-                        mainForm.Show(this);
+                        var mainForm = new MainForm(
+                            _serviceProvider.GetRequiredService<IScreenService>(),
+                            _serviceProvider.GetRequiredService<IServiceProvider>(),
+                            _serviceProvider.GetRequiredService<IUiStateService>()
+                            );
+                        mainForm.StartPosition = FormStartPosition.CenterParent;
+                        mainForm.ShowDialog(this);
                     }
                     else
                     {
@@ -84,9 +78,13 @@ namespace App.WinForms
         private void RegisterButton_Click(object sender, EventArgs e)
         {
             BankIdTextBox.Text = string.Empty;
-            var registerForm = _serviceProvider.GetRequiredService<RegisterForm>();
-            FormUtils.CenterToForm(this, registerForm);
-            registerForm.Show();
+
+
+            var registerForm = new RegisterForm(
+                        _serviceProvider.GetRequiredService<IBankService>()
+                        );
+            registerForm.StartPosition = FormStartPosition.CenterParent;
+            registerForm.ShowDialog(this);
         }
 
         private void LoginForm_FormClosed(object sender, FormClosedEventArgs e)

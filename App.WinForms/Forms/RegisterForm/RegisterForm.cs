@@ -12,20 +12,11 @@ namespace App.WinForms
     public partial class RegisterForm : Form
     {
         private readonly IBankService _bankService;
-        private bool _isNavigatingBack = false;
 
         public RegisterForm(IBankService bankService)
         {
             InitializeComponent();
             _bankService = bankService;
-            this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
-            bankNameTextBox.BackColor = ColorTranslator.FromHtml("#FFFFFF");
-            bankNameTextBox.ForeColor = ColorTranslator.FromHtml("#333333");
-
-            RegisterButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
-
-            CancelButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
-
         }
 
 
@@ -76,34 +67,12 @@ namespace App.WinForms
             this.Close();
         }
 
-        private void RegisterForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (e.CloseReason == CloseReason.UserClosing)
-            {
-                _isNavigatingBack = true;
-            }
-        }
-
-        private void RegisterForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-
-
-            if (_isNavigatingBack)
-            {
-                return;
-            }
-
-
-            else if (!_isNavigatingBack)
-            {
-                System.Windows.Forms.Application.Exit();
-            }
-        }
-
 
         private void label1_Click(object sender, EventArgs e)
         {
             bankNameTextBox.Focus();
         }
+
+
     }
 }

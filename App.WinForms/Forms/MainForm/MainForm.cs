@@ -3,7 +3,6 @@ using App.Application.DTO.Screens;
 using App.Application.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace App.WinForms
@@ -22,14 +21,7 @@ namespace App.WinForms
             _screenService = screenService;
             _serviceProvider = serviceProvider;
             _stateService = stateService;
-            this.BackColor = ColorTranslator.FromHtml("#F5F7FA");
 
-            screenList.BackColor = ColorTranslator.FromHtml("#FFFFFF");
-            screenList.ForeColor = ColorTranslator.FromHtml("#333333");
-
-            AddScreenButton.BackColor = ColorTranslator.FromHtml("#0F6CBD");
-            EditScreenButton.ForeColor = ColorTranslator.FromHtml("#0F6CBD");
-            DeleteScreenButton.BackColor = ColorTranslator.FromHtml("#D83B01");
         }
 
         private void InitializePeriodicTimer()
@@ -60,9 +52,9 @@ namespace App.WinForms
         public void centerTitle()
         {
             int titleWidth = TextRenderer.MeasureText(ScreenTitleLabel.Text, ScreenTitleLabel.Font).Width;
-            int formWidth = this.ClientSize.Width;
+            int formWidth = this.Width;
             int startingLeft = (formWidth - titleWidth) / 2;
-            ScreenTitleLabel.Left = startingLeft;
+            TitleLabel.Left = startingLeft;
         }
         //Optimize solution -> usage of modified date
         public void refreshList()
@@ -144,9 +136,13 @@ namespace App.WinForms
                     if (screen != null)
                     {
                         _stateService.Set(screen);
-                        var editScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
-                        FormUtils.CenterToForm(this, editScreen);
-                        editScreen.Show();
+                        var editScreen = new EditScreenForm(
+                            _serviceProvider.GetRequiredService<IScreenService>(),
+                            _serviceProvider.GetRequiredService<IServiceProvider>(),
+                            _serviceProvider.GetRequiredService<IUiStateService>(),
+                            _serviceProvider.GetRequiredService<IButtonService>());
+                        editScreen.StartPosition = FormStartPosition.CenterParent;
+                        editScreen.ShowDialog(this);
                     }
 
                     else
@@ -176,9 +172,13 @@ namespace App.WinForms
             _stateService.Clear<BaseScreenRequestDto>();
             _stateService.Clear<CreateScreenRequestDto>();
 
-            var addScreen = _serviceProvider.GetRequiredService<EditScreenForm>();
-            FormUtils.CenterToForm(this, addScreen);
-            addScreen.Show();
+            var editScreen = new EditScreenForm(
+                _serviceProvider.GetRequiredService<IScreenService>(),
+                _serviceProvider.GetRequiredService<IServiceProvider>(),
+                _serviceProvider.GetRequiredService<IUiStateService>(),
+                _serviceProvider.GetRequiredService<IButtonService>());
+            editScreen.StartPosition = FormStartPosition.CenterParent;
+            editScreen.ShowDialog(this);
         }
 
 

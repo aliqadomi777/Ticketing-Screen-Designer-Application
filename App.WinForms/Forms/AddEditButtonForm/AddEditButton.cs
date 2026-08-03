@@ -18,7 +18,6 @@ namespace App.WinForms
         private readonly IServiceTypeService _serviceTypeService;
         private readonly IButtonTypeService _buttonTypeService;
 
-        private bool _isNavigatingBack = false;
         public AddEditButton(
             IUiStateService stateService,
             IServiceTypeService serviceTypeService,
@@ -265,7 +264,7 @@ namespace App.WinForms
                             ValidationExtensions.ValidateModel(updatedTicketButton);
                             listOfPendingUpdatedButtons.Add(updatedTicketButton);
                             _stateService.Set(listOfPendingUpdatedButtons);
-                            _isNavigatingBack = true;
+                            refreshParentForm();
                             this.Close();
                         }
 
@@ -295,7 +294,7 @@ namespace App.WinForms
                             ValidationExtensions.ValidateModel(updatedMessageButton);
                             listOfPendingUpdatedButtons.Add(updatedMessageButton);
                             _stateService.Set(listOfPendingUpdatedButtons);
-                            _isNavigatingBack = true;
+                            refreshParentForm();
                             this.Close();
                         }
 
@@ -329,7 +328,7 @@ namespace App.WinForms
                         ValidationExtensions.ValidateModel(newButton);
                         if (SaveOrUpdatePendingButton(newButton, nonDbButtonUpdate))
                         {
-                            _isNavigatingBack = true;
+                            refreshParentForm();
                             this.Close();
                         }
 
@@ -350,7 +349,7 @@ namespace App.WinForms
 
                         if (SaveOrUpdatePendingButton(newButton, nonDbButtonUpdate))
                         {
-                            _isNavigatingBack = true;
+                            refreshParentForm();
                             this.Close();
                         }
                     }
@@ -437,42 +436,24 @@ namespace App.WinForms
             showHideDetail();
         }
 
-        private void AddEditButton_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            _stateService.Clear<BaseButtonResponseDto>();
 
-            if (_isNavigatingBack)
-            {
-
-                if (System.Windows.Forms.Application.OpenForms["EditScreenForm"] is EditScreenForm editScreenForm)
-                {
-                    editScreenForm.refreshList();
-                }
-                return;
-            }
-
-
-            else if (!_isNavigatingBack)
-            {
-                System.Windows.Forms.Application.Exit();
-            }
-        }
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
             _stateService.Clear<BaseButtonResponseDto>();
             _stateService.Clear<BaseButtonDto>();
             _stateService.Clear<UpdateButtonRequestDto>();
-
-            _isNavigatingBack = true;
+            refreshParentForm();
             this.Close();
+
         }
 
-        private void AddEditButton_FormClosing(object sender, FormClosingEventArgs e)
+
+        private void refreshParentForm()
         {
-            if (e.CloseReason == CloseReason.UserClosing)
+            if (this.Owner is EditScreenForm editScreenForm)
             {
-                _isNavigatingBack = true;
+                editScreenForm.refreshList();
             }
         }
     }

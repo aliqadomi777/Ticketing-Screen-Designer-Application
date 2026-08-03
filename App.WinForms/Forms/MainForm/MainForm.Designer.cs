@@ -44,9 +44,9 @@
             this.TitleLabel.Location = new System.Drawing.Point(373, 48);
             this.TitleLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.TitleLabel.Name = "TitleLabel";
-            this.TitleLabel.Size = new System.Drawing.Size(165, 31);
+            this.TitleLabel.Size = new System.Drawing.Size(194, 39);
             this.TitleLabel.TabIndex = 0;
-            this.TitleLabel.Text = "Main Form - ";
+            this.TitleLabel.Text = "Bank Name";
             // 
             // AddScreenButton
             // 
