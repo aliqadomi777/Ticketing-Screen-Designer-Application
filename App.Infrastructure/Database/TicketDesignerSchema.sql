@@ -39,10 +39,66 @@ IF OBJECT_ID('dbo.Services', 'U') IS NULL
 BEGIN
 CREATE TABLE Services (
     ServiceID INT PRIMARY KEY IDENTITY,
-    ServicesName VARCHAR(100) NOT NULL UNIQUE
+    ServicesNameEN VARCHAR(100) NOT NULL ,
+    ServicesNameAR VARCHAR(100) NOT NULL ,
+    MaxTicketsPerDay INT NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintServiceEN UNIQUE (BankID, ServicesNameEN),
+    CONSTRAINT UniqueConstraintServiceAR UNIQUE (BankID, ServicesNameAR)
 );
 END;
 
+-- create triggers for the added 
+-- new tables starts here ----------------------------------------------
+IF OBJECT_ID('dbo.Branches', 'U') IS NULL
+BEGIN
+CREATE TABLE Branches (
+    BranchID INT PRIMARY KEY IDENTITY,
+    BranchNameEN NVARCHAR(100) NOT NULL,
+    BranchNameAR NVARCHAR(100) NOT NULL,
+    IsActive BIT DEFAULT 0 NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintBranchEN UNIQUE (BankID, BranchNameEN),
+    CONSTRAINT UniqueConstraintBranchAR UNIQUE (BankID, BranchNameAR)
+);
+END;
+
+IF OBJECT_ID('dbo.CounterTypes', 'U') IS NULL
+BEGIN
+CREATE TABLE CounterTypes(
+    TypeID INT PRIMARY KEY IDENTITY,
+    TypeName VARCHAR (100) NOT NULL UNIQUE
+);
+END;
+
+IF OBJECT_ID('dbo.Counters', 'U') IS NULL
+BEGIN
+CREATE TABLE Counters (
+    CounterID INT PRIMARY KEY IDENTITY,
+    CounterNameEN NVARCHAR(100) NOT NULL,
+    CounterNameAR NVARCHAR(100) NOT NULL,
+    IsActive BIT DEFAULT 0 NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BranchID INT NOT NULL FOREIGN KEY REFERENCES Branches(BranchID) ON DELETE CASCADE,
+    TypeID INT NOT NULL FOREIGN KEY REFERENCES CounterTypes(TypeID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintCounterEN UNIQUE (BranchID, CounterNameEN),
+    CONSTRAINT UniqueConstraintCounterAR UNIQUE (BranchID, CounterNameAR)
+);
+END;
+
+IF OBJECT_ID('dbo.Users', 'U') IS NULL
+BEGIN
+CREATE TABLE Users(
+    UserID INT PRIMARY KEY IDENTITY,
+    UserName NVARCHAR(100) NOT NULL,
+    Password NVARCHAR(255) NOT NULL,  
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+);
+END;
+
+-- new tables end here ---------------------------------------------
 IF OBJECT_ID('dbo.Screens', 'U') IS NULL
 BEGIN
 CREATE TABLE Screens (
@@ -74,7 +130,7 @@ BEGIN
 CREATE TABLE Tickets(
     TicketID INT PRIMARY KEY IDENTITY,
     ServiceID INT NOT NULL FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
-    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE
+    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE NO ACTION
 );
 END;
 
@@ -95,6 +151,7 @@ SELECT v.TypeName
 FROM (VALUES ('Issue Ticket'), ('Show Message')) AS v(TypeName)
 WHERE NOT EXISTS (SELECT 1 FROM ButtonTypes b WHERE b.TypeName = v.TypeName);
 
+/*
 INSERT INTO Services (ServicesName) 
 SELECT v.ServicesName 
 FROM (VALUES 
@@ -109,7 +166,7 @@ FROM (VALUES
 ) AS v(ServicesName)
 WHERE NOT EXISTS (SELECT 1 FROM Services s WHERE s.ServicesName = v.ServicesName);
 GO
-
+*/
 -- TRIGGER: Updates Screens timestamp
 DROP TRIGGER IF EXISTS  dbo.triggerModifiedAt_Screens
 GO
@@ -202,6 +259,18 @@ BEGIN
 END;
 GO
 
+DROP TRIGGER IF EXISTS  dbo.triggerDeleteTicketsOnButtonDelete
+GO
+CREATE TRIGGER dbo.triggerDeleteTicketsOnButtonDelete
+ON dbo.Buttons
+AFTER DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DELETE FROM dbo.Tickets 
+    WHERE ButtonID IN (SELECT ButtonID FROM deleted);
+END;
+
 -- Prevents same bank having more than one active screen
 IF NOT EXISTS (
     SELECT 1 FROM sys.indexes 
@@ -214,3 +283,5 @@ BEGIN
     WHERE IsActive = 1;
 END;
 GO
+
+
