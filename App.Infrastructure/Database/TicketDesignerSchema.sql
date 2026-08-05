@@ -7,8 +7,14 @@ IF OBJECT_ID('dbo.Buttons', 'U') IS NOT NULL DROP TABLE dbo.Buttons;
 IF OBJECT_ID('dbo.Screens', 'U') IS NOT NULL DROP TABLE dbo.Screens;
 IF OBJECT_ID('dbo.Services', 'U') IS NOT NULL DROP TABLE dbo.Services;
 IF OBJECT_ID('dbo.ButtonTypes', 'U') IS NOT NULL DROP TABLE dbo.ButtonTypes;
+IF OBJECT_ID('dbo.Counters', 'U') IS NOT NULL DROP TABLE dbo.Counters;
+IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL DROP TABLE dbo.Users;
+IF OBJECT_ID('dbo.Branches', 'U') IS NOT NULL DROP TABLE dbo.Branches;
+IF OBJECT_ID('dbo.CounterTypes', 'U') IS NOT NULL DROP TABLE dbo.CounterTypes;
 IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
-*/ 
+*/
+
+
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ticketDesignerDB')
 BEGIN
     CREATE DATABASE ticketDesignerDB;
@@ -36,69 +42,11 @@ CREATE TABLE ButtonTypes(
 END;
 
 IF OBJECT_ID('dbo.Services', 'U') IS NULL
-BEGIN
-CREATE TABLE Services (
-    ServiceID INT PRIMARY KEY IDENTITY,
-    ServicesNameEN VARCHAR(100) NOT NULL ,
-    ServicesNameAR VARCHAR(100) NOT NULL ,
-    MaxTicketsPerDay INT NOT NULL,
-    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
-    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintServiceEN UNIQUE (BankID, ServicesNameEN),
-    CONSTRAINT UniqueConstraintServiceAR UNIQUE (BankID, ServicesNameAR)
+BEGIN CREATE TABLE Services (
+ServiceID INT PRIMARY KEY IDENTITY, ServicesName VARCHAR(100) NOT NULL UNIQUE 
 );
 END;
 
--- create triggers for the added 
--- new tables starts here ----------------------------------------------
-IF OBJECT_ID('dbo.Branches', 'U') IS NULL
-BEGIN
-CREATE TABLE Branches (
-    BranchID INT PRIMARY KEY IDENTITY,
-    BranchNameEN NVARCHAR(100) NOT NULL,
-    BranchNameAR NVARCHAR(100) NOT NULL,
-    IsActive BIT DEFAULT 0 NOT NULL,
-    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
-    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintBranchEN UNIQUE (BankID, BranchNameEN),
-    CONSTRAINT UniqueConstraintBranchAR UNIQUE (BankID, BranchNameAR)
-);
-END;
-
-IF OBJECT_ID('dbo.CounterTypes', 'U') IS NULL
-BEGIN
-CREATE TABLE CounterTypes(
-    TypeID INT PRIMARY KEY IDENTITY,
-    TypeName VARCHAR (100) NOT NULL UNIQUE
-);
-END;
-
-IF OBJECT_ID('dbo.Counters', 'U') IS NULL
-BEGIN
-CREATE TABLE Counters (
-    CounterID INT PRIMARY KEY IDENTITY,
-    CounterNameEN NVARCHAR(100) NOT NULL,
-    CounterNameAR NVARCHAR(100) NOT NULL,
-    IsActive BIT DEFAULT 0 NOT NULL,
-    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
-    BranchID INT NOT NULL FOREIGN KEY REFERENCES Branches(BranchID) ON DELETE CASCADE,
-    TypeID INT NOT NULL FOREIGN KEY REFERENCES CounterTypes(TypeID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintCounterEN UNIQUE (BranchID, CounterNameEN),
-    CONSTRAINT UniqueConstraintCounterAR UNIQUE (BranchID, CounterNameAR)
-);
-END;
-
-IF OBJECT_ID('dbo.Users', 'U') IS NULL
-BEGIN
-CREATE TABLE Users(
-    UserID INT PRIMARY KEY IDENTITY,
-    UserName NVARCHAR(100) NOT NULL,
-    Password NVARCHAR(255) NOT NULL,  
-    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
-);
-END;
-
--- new tables end here ---------------------------------------------
 IF OBJECT_ID('dbo.Screens', 'U') IS NULL
 BEGIN
 CREATE TABLE Screens (
@@ -130,7 +78,7 @@ BEGIN
 CREATE TABLE Tickets(
     TicketID INT PRIMARY KEY IDENTITY,
     ServiceID INT NOT NULL FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
-    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE NO ACTION
+    ButtonID INT NOT NULL UNIQUE FOREIGN KEY REFERENCES Buttons(ButtonID) ON DELETE CASCADE
 );
 END;
 
@@ -151,22 +99,9 @@ SELECT v.TypeName
 FROM (VALUES ('Issue Ticket'), ('Show Message')) AS v(TypeName)
 WHERE NOT EXISTS (SELECT 1 FROM ButtonTypes b WHERE b.TypeName = v.TypeName);
 
-/*
-INSERT INTO Services (ServicesName) 
-SELECT v.ServicesName 
-FROM (VALUES 
-    ('Open Account'),
-    ('Take a Loan'),
-    ('Wire Transfers'),
-    ('Debit and Credit Cards'),
-    ('Foreign Currency Exchange'),
-    ('Safe Deposit Boxes'),
-    ('Bank Guarantees'),
-    ('Wealth and Investment Management')
-) AS v(ServicesName)
-WHERE NOT EXISTS (SELECT 1 FROM Services s WHERE s.ServicesName = v.ServicesName);
-GO
-*/
+
+
+
 -- TRIGGER: Updates Screens timestamp
 DROP TRIGGER IF EXISTS  dbo.triggerModifiedAt_Screens
 GO
@@ -284,4 +219,146 @@ BEGIN
 END;
 GO
 
+-- v2 migration starts here ----------------------------------------------
 
+IF COL_LENGTH('dbo.Services', 'ServicesNameEN') IS NULL
+BEGIN
+DELETE b
+FROM Buttons b
+INNER JOIN ButtonTypes bt
+    ON b.ButtonType = bt.TypeID
+WHERE bt.TypeName = 'Issue Ticket';
+----------------------------------------------------
+DECLARE @ButtonFK SYSNAME;
+DECLARE @SQL NVARCHAR(MAX);
+
+SELECT @ButtonFK = fk.name
+FROM sys.foreign_keys fk
+INNER JOIN sys.foreign_key_columns fkc
+    ON fk.object_id = fkc.constraint_object_id
+INNER JOIN sys.columns c
+    ON c.object_id = fkc.parent_object_id
+   AND c.column_id = fkc.parent_column_id
+WHERE fk.parent_object_id = OBJECT_ID('dbo.Tickets')
+  AND c.name = 'ButtonID';
+
+IF @ButtonFK IS NOT NULL
+BEGIN
+    SET @SQL =
+        'ALTER TABLE dbo.Tickets DROP CONSTRAINT '
+        + QUOTENAME(@ButtonFK);
+
+    EXEC sp_executesql @SQL;
+END;
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = 'FK_Tickets_Buttons'
+)
+BEGIN
+    ALTER TABLE dbo.Tickets
+    ADD CONSTRAINT FK_Tickets_Buttons
+    FOREIGN KEY (ButtonID)
+    REFERENCES dbo.Buttons(ButtonID)
+    ON DELETE NO ACTION;
+END;
+
+-- first you must drop the services table then execute this part of the script
+DECLARE @ServiceFK SYSNAME;
+
+SELECT @ServiceFK = fk.name
+FROM sys.foreign_keys fk
+INNER JOIN sys.foreign_key_columns fkc
+    ON fk.object_id = fkc.constraint_object_id
+INNER JOIN sys.columns c
+    ON c.object_id = fkc.parent_object_id
+   AND c.column_id = fkc.parent_column_id
+WHERE fk.parent_object_id = OBJECT_ID('dbo.Tickets')
+  AND c.name = 'ServiceID';
+
+IF @ServiceFK IS NOT NULL
+BEGIN
+    SET @SQL =
+        'ALTER TABLE dbo.Tickets DROP CONSTRAINT '
+        + QUOTENAME(@ServiceFK);
+
+    EXEC sp_executesql @SQL;
+END;
+
+DROP TABLE IF EXISTS dbo.Services;
+CREATE TABLE Services (
+    ServiceID INT PRIMARY KEY IDENTITY,
+    ServicesNameEN VARCHAR(100) NOT NULL,
+    ServicesNameAR VARCHAR(100) NOT NULL,
+    MaxTicketsPerDay INT NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintServiceEN UNIQUE (BankID, ServicesNameEN),
+    CONSTRAINT UniqueConstraintServiceAR UNIQUE (BankID, ServicesNameAR)
+);
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.foreign_keys
+    WHERE name = 'FK_Tickets_Services'
+)
+BEGIN
+    ALTER TABLE dbo.Tickets
+    ADD CONSTRAINT FK_Tickets_Services
+    FOREIGN KEY (ServiceID)
+    REFERENCES dbo.Services(ServiceID)
+    ON DELETE CASCADE;
+END;
+
+IF OBJECT_ID('dbo.Branches', 'U') IS NULL
+BEGIN
+CREATE TABLE Branches (
+    BranchID INT PRIMARY KEY IDENTITY,
+    BranchNameEN NVARCHAR(100) NOT NULL,
+    BranchNameAR NVARCHAR(100) NOT NULL,
+    IsActive BIT DEFAULT 0 NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintBranchEN UNIQUE (BankID, BranchNameEN),
+    CONSTRAINT UniqueConstraintBranchAR UNIQUE (BankID, BranchNameAR)
+);
+END;
+
+IF OBJECT_ID('dbo.CounterTypes', 'U') IS NULL
+BEGIN
+CREATE TABLE CounterTypes(
+    TypeID INT PRIMARY KEY IDENTITY,
+    TypeName VARCHAR (100) NOT NULL UNIQUE
+);
+END;
+
+IF OBJECT_ID('dbo.Counters', 'U') IS NULL
+BEGIN
+CREATE TABLE Counters (
+    CounterID INT PRIMARY KEY IDENTITY,
+    CounterNameEN NVARCHAR(100) NOT NULL,
+    CounterNameAR NVARCHAR(100) NOT NULL,
+    IsActive BIT DEFAULT 0 NOT NULL,
+    ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
+    BranchID INT NOT NULL FOREIGN KEY REFERENCES Branches(BranchID) ON DELETE CASCADE,
+    TypeID INT NOT NULL FOREIGN KEY REFERENCES CounterTypes(TypeID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintCounterEN UNIQUE (BranchID, CounterNameEN),
+    CONSTRAINT UniqueConstraintCounterAR UNIQUE (BranchID, CounterNameAR)
+);
+END;
+
+IF OBJECT_ID('dbo.Users', 'U') IS NULL
+BEGIN
+CREATE TABLE Users(
+    UserID INT PRIMARY KEY IDENTITY,
+    UserName NVARCHAR(100) NOT NULL,
+    Password NVARCHAR(255) NOT NULL,  
+    BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintUserName UNIQUE (UserName, BankID),
+
+);
+END;
+END;
+-- new tables end here ---------------------------------------------
