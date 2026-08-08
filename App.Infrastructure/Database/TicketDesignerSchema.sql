@@ -15,6 +15,7 @@ IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
 */
 
 
+
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'ticketDesignerDB')
 BEGIN
     CREATE DATABASE ticketDesignerDB;
@@ -290,13 +291,14 @@ END;
 DROP TABLE IF EXISTS dbo.Services;
 CREATE TABLE Services (
     ServiceID INT PRIMARY KEY IDENTITY,
-    ServicesNameEN VARCHAR(100) NOT NULL,
-    ServicesNameAR VARCHAR(100) NOT NULL,
-    MaxTicketsPerDay INT NOT NULL,
+    ServiceNameEN VARCHAR(100) NOT NULL,
+    ServiceNameAR VARCHAR(100) NOT NULL,
+    MaxTicketsPerDay INT NOT NULL CHECK (MaxTicketsPerDay BETWEEN 1 AND 100),
+    IsActive BIT DEFAULT 0 NOT NULL,
     ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
     BankID INT NOT NULL FOREIGN KEY REFERENCES Banks(BankID) ON DELETE CASCADE,
-    CONSTRAINT UniqueConstraintServiceEN UNIQUE (BankID, ServicesNameEN),
-    CONSTRAINT UniqueConstraintServiceAR UNIQUE (BankID, ServicesNameAR)
+    CONSTRAINT UniqueConstraintServiceEN UNIQUE (BankID, ServiceNameEN),
+    CONSTRAINT UniqueConstraintServiceAR UNIQUE (BankID, ServiceNameAR)
 );
 IF NOT EXISTS
 (
@@ -334,6 +336,12 @@ CREATE TABLE CounterTypes(
 );
 END;
 
+INSERT INTO dbo.CounterTypes (TypeName)
+VALUES ('Teller'),
+       ('Customer Service');
+
+
+
 IF OBJECT_ID('dbo.Counters', 'U') IS NULL
 BEGIN
 CREATE TABLE Counters (
@@ -346,6 +354,18 @@ CREATE TABLE Counters (
     TypeID INT NOT NULL FOREIGN KEY REFERENCES CounterTypes(TypeID) ON DELETE CASCADE,
     CONSTRAINT UniqueConstraintCounterEN UNIQUE (BranchID, CounterNameEN),
     CONSTRAINT UniqueConstraintCounterAR UNIQUE (BranchID, CounterNameAR)
+);
+END;
+
+
+IF OBJECT_ID('dbo.service_allocations', 'U') IS NULL
+BEGIN
+CREATE TABLE service_allocations (
+    allocationID INT PRIMARY KEY IDENTITY,
+    CounterID INT NOT NULL FOREIGN KEY REFERENCES Counters(CounterID) ON DELETE NO ACTION,
+    ServiceID INT NOT NULL FOREIGN KEY REFERENCES Services(ServiceID) ON DELETE CASCADE,
+    CONSTRAINT UniqueConstraintCounterService UNIQUE (CounterID, ServiceID),
+
 );
 END;
 
