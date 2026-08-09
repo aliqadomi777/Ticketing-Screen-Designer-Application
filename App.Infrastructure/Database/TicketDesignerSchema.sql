@@ -5,12 +5,13 @@ IF OBJECT_ID('dbo.Messages', 'U') IS NOT NULL DROP TABLE dbo.Messages;
 IF OBJECT_ID('dbo.Tickets', 'U') IS NOT NULL DROP TABLE dbo.Tickets;
 IF OBJECT_ID('dbo.Buttons', 'U') IS NOT NULL DROP TABLE dbo.Buttons;
 IF OBJECT_ID('dbo.Screens', 'U') IS NOT NULL DROP TABLE dbo.Screens;
-IF OBJECT_ID('dbo.Services', 'U') IS NOT NULL DROP TABLE dbo.Services;
 IF OBJECT_ID('dbo.ButtonTypes', 'U') IS NOT NULL DROP TABLE dbo.ButtonTypes;
+IF OBJECT_ID('dbo.service_allocations', 'U') IS NOT NULL DROP TABLE dbo.service_allocations;
 IF OBJECT_ID('dbo.Counters', 'U') IS NOT NULL DROP TABLE dbo.Counters;
 IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL DROP TABLE dbo.Users;
 IF OBJECT_ID('dbo.Branches', 'U') IS NOT NULL DROP TABLE dbo.Branches;
 IF OBJECT_ID('dbo.CounterTypes', 'U') IS NOT NULL DROP TABLE dbo.CounterTypes;
+IF OBJECT_ID('dbo.Services', 'U') IS NOT NULL DROP TABLE dbo.Services;
 IF OBJECT_ID('dbo.Banks', 'U') IS NOT NULL DROP TABLE dbo.Banks;
 */
 
@@ -291,8 +292,8 @@ END;
 DROP TABLE IF EXISTS dbo.Services;
 CREATE TABLE Services (
     ServiceID INT PRIMARY KEY IDENTITY,
-    ServiceNameEN VARCHAR(100) NOT NULL,
-    ServiceNameAR VARCHAR(100) NOT NULL,
+    ServiceNameEN NVARCHAR(100) NOT NULL,
+    ServiceNameAR NVARCHAR(100) NOT NULL,
     MaxTicketsPerDay INT NOT NULL CHECK (MaxTicketsPerDay BETWEEN 1 AND 100),
     IsActive BIT DEFAULT 0 NOT NULL,
     ModifiedAt DATETIMEOFFSET DEFAULT SYSUTCDATETIME() NOT NULL,
