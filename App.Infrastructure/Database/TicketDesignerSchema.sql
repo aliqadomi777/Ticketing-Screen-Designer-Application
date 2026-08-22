@@ -223,7 +223,7 @@ GO
 
 -- v2 migration starts here ----------------------------------------------
 
-IF COL_LENGTH('dbo.Services', 'ServicesNameEN') IS NULL
+IF COL_LENGTH('dbo.Services', 'ServiceNameEN') IS NULL
 BEGIN
 DELETE b
 FROM Buttons b
@@ -383,3 +383,75 @@ CREATE TABLE Users(
 END;
 END;
 -- new tables end here ---------------------------------------------
+
+
+IF COL_LENGTH('dbo.Services', 'MinimumServiceTime') IS NULL
+BEGIN
+    ALTER TABLE dbo.Services
+    ADD MinimumServiceTime INT NOT NULL
+        CONSTRAINT DF_Services_MinimumServiceTime
+        DEFAULT (45) WITH VALUES;
+END;
+GO
+
+IF COL_LENGTH('dbo.Services', 'MaximumServiceTime') IS NULL
+BEGIN
+    ALTER TABLE dbo.Services
+    ADD MaximumServiceTime INT NOT NULL
+        CONSTRAINT DF_Services_MaximumServiceTime
+        DEFAULT (300) WITH VALUES;
+END;
+GO
+
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = 'CK_Services_MinimumServiceTime_Range'
+)
+BEGIN
+    ALTER TABLE dbo.Services
+    ADD CONSTRAINT CK_Services_MinimumServiceTime_Range
+    CHECK
+    (
+        MinimumServiceTime >= 30
+        AND MinimumServiceTime <= 999999
+    );
+END;
+GO
+
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = 'CK_Services_MaximumServiceTime_Range'
+)
+BEGIN
+    ALTER TABLE dbo.Services
+    ADD CONSTRAINT CK_Services_MaximumServiceTime_Range
+    CHECK
+    (
+        MaximumServiceTime >= 30
+        AND MaximumServiceTime <= 999999
+    );
+END;
+GO
+
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE name = 'CK_Services_ServiceTime_Order'
+)
+BEGIN
+    ALTER TABLE dbo.Services
+    ADD CONSTRAINT CK_Services_ServiceTime_Order
+    CHECK
+    (
+        MinimumServiceTime < MaximumServiceTime
+    );
+END;
+GO
