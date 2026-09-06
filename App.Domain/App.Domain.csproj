@@ -49,7 +49,7 @@
     <Compile Include="Models\ButtonTypes.cs" />
     <Compile Include="Models\Message.cs" />
     <Compile Include="Models\Screen.cs" />
-    <Compile Include="Models\ServiceType.cs" />
+    <Compile Include="Models\Service.cs" />
     <Compile Include="Models\Ticket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
