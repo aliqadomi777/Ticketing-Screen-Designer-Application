@@ -22,7 +22,9 @@ namespace App.Infrastructure.Repositories
             if (buttonType == 1)
             {
                 query = @"
-                SELECT B.ButtonID, B.ButtonNameEN, B.ButtonNameAR, B.ScreenID, B.ModifiedAt, B.ButtonType, T.TicketID, T.ServiceID, S.ServicesName
+                SELECT B.ButtonID, B.ButtonNameEN, B.ButtonNameAR, B.ScreenID, B.ModifiedAt, B.ButtonType, T.TicketID, T.ServiceID,
+                S.ServiceNameEN, S.ServiceNameAR, S.MaxTicketsPerDay, S.IsActive, S.MinimumServiceTime,
+                S.MaximumServiceTime
                 FROM Buttons B INNER JOIN Tickets T ON B.ButtonID = T.ButtonID
                 INNER JOIN Services S ON S.ServiceID = T.ServiceID
                 WHERE B.ButtonID = @ButtonID;";
@@ -61,10 +63,17 @@ namespace App.Infrastructure.Repositories
                                 ModifiedAt = reader.GetDateTimeOffset(reader.GetOrdinal("ModifiedAt")),
                                 ScreenId = reader.GetInt32(reader.GetOrdinal("ScreenID")),
                                 ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
-                                ServiceName = reader.GetString(reader.GetOrdinal("ServicesName")),
+                                Service = new ServiceModel
+                                {
+                                    ServiceNameEN = reader.GetString(reader.GetOrdinal("ServiceNameEN")),
+                                    ServiceNameAR = reader.GetString(reader.GetOrdinal("ServiceNameAR")),
+                                    MaxTicketsPerDay = reader.GetInt32(reader.GetOrdinal("MaxTicketsPerDay")),
+                                    IsActive = reader.GetBoolean(reader.GetOrdinal("IsActive")),
+                                    MinimumServiceTime = reader.GetInt32(reader.GetOrdinal("MinimumServiceTime")),
+                                    MaximumServiceTime = reader.GetInt32(reader.GetOrdinal("MaximumServiceTime")),
+                                },
                                 TicketId = reader.GetInt32(reader.GetOrdinal("TicketID")),
                                 TypeName = "Issue Ticket",
-
                             };
 
                         }

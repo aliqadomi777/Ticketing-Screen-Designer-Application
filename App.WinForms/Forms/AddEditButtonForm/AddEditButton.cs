@@ -1,4 +1,5 @@
-﻿using App.Application.DTO.Buttons;
+﻿using App.Application.DTO.Banks;
+using App.Application.DTO.Buttons;
 using App.Application.DTO.ButtonTypes;
 using App.Application.DTO.Screens;
 using App.Application.DTO.ServiceTypes;
@@ -33,8 +34,8 @@ namespace App.WinForms
 
         public void refreshForm()
         {
-
-            var serviceTypes = _serviceTypeService.GetAllServices();
+            var bankSession = _stateService.Get<BankResponseDto>();
+            var serviceTypes = _serviceTypeService.GetAllServices(bankSession.BankId);
             var buttonTypes = _buttonTypeService.GetAllButtonTypes();
             ButtonActionList.DisplayMember = "DisplayText";
             ServiceList.DisplayMember = "DisplayText";
@@ -73,7 +74,7 @@ namespace App.WinForms
             if (button is TicketButtonResponseDto ticketButton)
             {
                 ServiceList.SelectedItem = ServiceList.Items.Cast<ServiceTypeResponseDto>()
-                    .FirstOrDefault(s => s.ServicesName == ticketButton.ServiceName);
+                    .FirstOrDefault(s => s.ServiceNameEN == ticketButton.Service.ServiceNameEN);
             }
             else if (button is UpdateTicketButtonRequest dbTicket)
             {

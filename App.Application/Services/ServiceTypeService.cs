@@ -11,11 +11,11 @@ namespace App.Application.Services
 {
     public class ServiceTypeService : IServiceTypeService
     {
-        private readonly IFetchableRepository<ServiceType> _fetchRepository;
-        private readonly IGetAllRepository<ServiceType> _fetchAllRepository;
+        private readonly IFetchableRepository<ServiceModel> _fetchRepository;
+        private readonly IListableRepository<ServiceModel> _fetchAllRepository;
         private readonly ILogger<ServiceTypeService> _logger;
 
-        public ServiceTypeService(IFetchableRepository<ServiceType> fetchRepository, IGetAllRepository<ServiceType> fetchAllRepository,
+        public ServiceTypeService(IFetchableRepository<ServiceModel> fetchRepository, IListableRepository<ServiceModel> fetchAllRepository,
             ILogger<ServiceTypeService> logger)
         {
             _fetchRepository = fetchRepository;
@@ -35,7 +35,12 @@ namespace App.Application.Services
                 return new ServiceTypeResponseDto
                 {
                     ServiceId = serviceType.ServiceId,
-                    ServicesName = serviceType.ServicesName
+                    ServiceNameEN = serviceType.ServiceNameEN,
+                    ServiceNameAR = serviceType.ServiceNameAR,
+                    MinimumServiceTime = serviceType.MinimumServiceTime,
+                    MaximumServiceTime = serviceType.MaximumServiceTime,
+                    MaxTicketsPerDay = serviceType.MaxTicketsPerDay,
+                    IsActive = serviceType.IsActive,
                 };
             }
             catch (Exception ex)
@@ -45,15 +50,20 @@ namespace App.Application.Services
             }
         }
 
-        public List<ServiceTypeResponseDto> GetAllServices()
+        public List<ServiceTypeResponseDto> GetAllServices(int bankId)
         {
             try
             {
-                var serviceTypes = _fetchAllRepository.GetAll();
+                var serviceTypes = _fetchAllRepository.GetAll(bankId);
                 return serviceTypes.Select(serviceType => new ServiceTypeResponseDto
                 {
                     ServiceId = serviceType.ServiceId,
-                    ServicesName = serviceType.ServicesName
+                    ServiceNameEN = serviceType.ServiceNameEN,
+                    ServiceNameAR = serviceType.ServiceNameAR,
+                    MinimumServiceTime = serviceType.MinimumServiceTime,
+                    MaximumServiceTime = serviceType.MaximumServiceTime,
+                    MaxTicketsPerDay = serviceType.MaxTicketsPerDay,
+                    IsActive = serviceType.IsActive,
                 }).ToList();
             }
             catch (Exception ex)

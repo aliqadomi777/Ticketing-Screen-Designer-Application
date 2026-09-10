@@ -6,14 +6,14 @@ using System.Data.SqlClient;
 namespace App.Infrastructure.Repositories
 {
     public class ServiceRepository : BaseRepository,
-        IFetchableRepository<ServiceType>,
-        IGetAllRepository<ServiceType>
+        IFetchableRepository<ServiceModel>,
+        IListableRepository<ServiceModel>
     {
         public ServiceRepository(string connectionString) : base(connectionString) { }
-        public ServiceType GetById(int serviceId)
+        public ServiceModel GetById(int serviceId)
         {
             string query = @"
-                SELECT ServiceID, ServicesName 
+                SELECT ServiceID, ServiceNameEN 
                 FROM Services 
                 WHERE ServiceID = @ServiceID;";
 
@@ -27,10 +27,10 @@ namespace App.Infrastructure.Repositories
                 {
                     if (reader.Read())
                     {
-                        return new ServiceType
+                        return new ServiceModel
                         {
                             ServiceId = reader.GetInt32(reader.GetOrdinal("ServiceID")),
-                            ServicesName = reader.GetString(reader.GetOrdinal("ServicesName")),
+                            ServiceNameEN = reader.GetString(reader.GetOrdinal("ServiceNameEN")),
 
                         };
                     }
@@ -41,29 +41,32 @@ namespace App.Infrastructure.Repositories
 
 
         }
-        public IEnumerable<ServiceType> GetAll()
+        public IEnumerable<ServiceModel> GetAll(int bankId)
         {
             string query = @"
-                SELECT ServiceID, ServicesName 
-                FROM Services;";
-            List<ServiceType> services = new List<ServiceType>();
+                SELECT ServiceID, ServiceNameEN
+                FROM Services
+                WHERE BankID=@BankID;";
+            List<ServiceModel> services = new List<ServiceModel>();
 
             using (var conn = new SqlConnection(ConnectionString))
             using (var cmd = new SqlCommand(query, conn))
             {
+                cmd.Parameters.Add("@BankID", SqlDbType.Int).Value = bankId;
                 conn.Open();
                 using (var reader = cmd.ExecuteReader())
                 {
                     if (reader.HasRows)
                     {
                         int serviceIdOrd = reader.GetOrdinal("ServiceID");
-                        int servicesNameOrd = reader.GetOrdinal("ServicesName");
+                        int serviceNameENOrd = reader.GetOrdinal("ServiceNameEN");
+
                         while (reader.Read())
                         {
-                            services.Add(new ServiceType
+                            services.Add(new ServiceModel
                             {
                                 ServiceId = reader.GetInt32(serviceIdOrd),
-                                ServicesName = reader.GetString(servicesNameOrd),
+                                ServiceNameEN = reader.GetString(serviceNameENOrd),
                             });
                         }
                     }

@@ -6,6 +6,6 @@ namespace App.Application.Interfaces
     public interface IServiceTypeService
     {
         ServiceTypeResponseDto GetServiceType(int id);
-        List<ServiceTypeResponseDto> GetAllServices();
+        List<ServiceTypeResponseDto> GetAllServices(int bankId);
     }
 }

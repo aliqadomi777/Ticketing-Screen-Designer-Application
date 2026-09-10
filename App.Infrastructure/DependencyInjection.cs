@@ -43,8 +43,8 @@ namespace App.Infrastructure
             services.AddTransient<IFetchableRepository<ButtonTypes>>(sp => sp.GetRequiredService<ButtonTypeRepository>());
 
             services.AddTransient(provider => new ServiceRepository(connectionString));
-            services.AddTransient<IGetAllRepository<ServiceType>>(sp => sp.GetRequiredService<ServiceRepository>());
-            services.AddTransient<IFetchableRepository<ServiceType>>(sp => sp.GetRequiredService<ServiceRepository>());
+            services.AddTransient<IListableRepository<ServiceModel>>(sp => sp.GetRequiredService<ServiceRepository>());
+            services.AddTransient<IFetchableRepository<ServiceModel>>(sp => sp.GetRequiredService<ServiceRepository>());
 
             return services;
         }

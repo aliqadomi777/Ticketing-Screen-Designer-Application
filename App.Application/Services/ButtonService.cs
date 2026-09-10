@@ -1,4 +1,5 @@
 ﻿using App.Application.DTO.Buttons;
+using App.Application.DTO.ServiceTypes;
 using App.Application.Interfaces;
 using App.Domain.Interfaces;
 using App.Domain.Models;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 namespace App.Application.Services
 {
     public class ButtonService : IButtonService, IAddButtonService
@@ -89,7 +91,16 @@ namespace App.Application.Services
                         ScreenId = ticketModel.ScreenId,
                         ModifiedAt = ticketModel.ModifiedAt,
                         ServiceId = ticketModel.ServiceId,
-                        ServiceName = ticketModel.ServiceName,
+                        Service = new ServiceTypeResponseDto
+                        {
+                            ServiceId = ticketModel.Service.ServiceId,
+                            ServiceNameEN = ticketModel.Service.ServiceNameEN,
+                            ServiceNameAR = ticketModel.Service.ServiceNameAR,
+                            MinimumServiceTime = ticketModel.Service.MinimumServiceTime,
+                            MaximumServiceTime = ticketModel.Service.MaximumServiceTime,
+                            MaxTicketsPerDay = ticketModel.Service.MaxTicketsPerDay,
+                            IsActive = ticketModel.Service.IsActive,
+                        },
                         TicketId = ticketModel.TicketId,
                         TypeName = ticketModel.TypeName
 
