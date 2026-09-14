@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace App.WinForms
 {
@@ -207,7 +208,11 @@ namespace App.WinForms
 
             var ticketButton = button as TicketButtonResponseDto;
             var messageButton = button as MessageButtonResponseDto;
-
+            if (selectedAction == "Issue Ticket" && ServiceList.SelectedIndex == -1)
+            {
+                MessageBox.Show("No services are available to assign to this button.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             // check if pending messages or tickets if we wanted to update them 
 
 
