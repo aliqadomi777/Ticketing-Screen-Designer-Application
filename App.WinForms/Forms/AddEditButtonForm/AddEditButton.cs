@@ -50,8 +50,8 @@ namespace App.WinForms
             {
                 ServiceList.Items.Add(serviceType);
             }
-            ButtonActionList.SelectedIndex = 0;
-            ServiceList.SelectedIndex = 0;
+            ButtonActionList.SelectedIndex = ButtonActionList.Items.Count > 0 ? 0 : -1;
+            ServiceList.SelectedIndex = ServiceList.Items.Count > 0 ? 0 : -1;
             showHideDetail();
         }
         private void loadInfo(object button)
