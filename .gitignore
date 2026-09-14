@@ -5,3 +5,4 @@
 # Ignore bin and obj folders anywhere in the project (including subfolders)
 **/bin/
 **/obj/
+**/packages/
