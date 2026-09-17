@@ -416,7 +416,8 @@ namespace App.Application.Services
                 {
                     foreach (var buttonId in buttonIds)
                     {
-                        bool isDeleted = _deleteButtonRepository.Delete(buttonId);
+                        _deleteTicketRepository.Delete(buttonId);
+                        _deleteButtonRepository.Delete(buttonId);
                     }
 
                     scope.Complete();
